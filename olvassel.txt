@@ -1,0 +1,15 @@
+
+Ez egy utf8f-ucsf konverziós C könyvtár, plusz egy könyvtár, amiben
+utf8f és ucsf karakter manipulációs függvények vannak. (strlen,
+strcpy, strncpy, substr, left, right, nextchar, prevchar, stb.)
+
+Az utf8f egy olyan kódrendszer, ami minden 32bites kódot tartalmaz -
+ellentétben az utf8-al, amiből bizonyos karakterek ki vannak zárva.
+
+Az ucsf olyan kódrendszer, amiben minden 32 bites szám egy
+karaktert jelöl, - legfeljebb egyes számokhoz rendelt karaktereket
+nem használunk.
+
+Minden utf8 karakter egyben utf8f karakter is.
+Minden ucs karakter egyben ucsf karakter is.
+
