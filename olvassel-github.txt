@@ -1,0 +1,13 @@
+
+
+Így kell repót feltölteni:
+
+git remote add origin git@github.com:lcsiszar/utf8f.git
+git push -u origin master
+
+Vagy https-el:
+
+git remote add origin https://github.com/lcsiszar/utf8f.git
+git push -u origin master
+
+Azt még egyenlőre nem tudom, hogyan lehet ssh kulccsal bejelentkezni.
