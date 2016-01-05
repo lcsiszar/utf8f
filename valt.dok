@@ -7,6 +7,10 @@ dátum, a programozó neve, verzió (ha van) a változás leírása.
 Csiszár Levente <csiszar@eriadorber.hu>, 1998.01.13
 
 
+2016.01.05, Csiszár Levente, UTF8F 0.0.3
+
+ - Pointeres implementáció.
+
 2016.01.05, Csiszár Levente, UTF8F 0.0.2
 
  - github doksi.

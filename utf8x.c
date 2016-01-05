@@ -42,16 +42,22 @@ typedef unsigned char utf8char_t;
 typedef uint32_t ucsf_t;
 
 //*******************************************************************
-// Egy puffer cim, egy pointer benne, meg a puffer hossza.
-// Ezt használja, amikor részletekben jön az input és azt
-// kell folyamként kódolni.
+/*
+ Egy mutató struktúra, amit az utf8f puffer elemzéséhez használ.
+ Akkor is ezt használja, amikor részletekben jön az input.
+ buf: A puffer első bájtja
+ ibuf: A puffer első feldolgozalan bájtja.
+ ebuf: A puffer utolsó utáni bájtja.
+ Hossz: ebuf-buf
+ A hátralévő karakterek száma: ebuf-ibuf
+*/
 typedef struct _utf8fp
 {
    int status;
    utf8char_t *buf;
-   size_t i;
-   size_t l;
-   ucsf_t ucsf;
+   utf8char_t *ibuf; // A kövekező, még feldolgozatlan karakterre mutat.
+   utf8char_t *ebuf; // A buffer utolsó karaktere után mutat.
+   ucsf_t ucsf; // Itt (is) adja az eredményt, illetve itt tárolja a feldolgozás közbeni részeredményt.
 } utf8fp;
 
 
@@ -219,7 +225,7 @@ static const char lenFromUtfHead[256] = { // 0= invalid header (0b10xxxxxx and 0
 
 
 //*******************************************************************
-#define utf8fpNext(buf,i); ((buf)->buf+=i)
+#define utf8fpNext(up,i); ((up)->ibuf+=i)
 
 //*******************************************************************
 // A getUCSxFromUtf8f_n(): felteszi, hogy van elég hely és a közbenső
@@ -254,49 +260,54 @@ static const char lenFromUtfHead[256] = { // 0= invalid header (0b10xxxxxx and 0
                                ((p)+6)&UTF8_CHARMASK)
 
 //*******************************************************************
-static ucsf_t utf8nextcharfull(utf8fp *buf)
+static ucsf_t utf8nextcharfull(utf8fp *up)
 // Akkor hívja, amikor buf-ban biztosan van 8 hely.
 {
    utf8char_t h;
    ucsf_t ucsx;
 
-   switch(lenFromUtfHead[h=*buf->buf])
+   switch(lenFromUtfHead[h=*up->ibuf])
    {
-   case 0: buf->status=UTF8FS_INVALID;return UTF8F_CHECK; // Invalid az uft8f kód. 
-   case 1: utf8fpNext(buf,1);return h;
-   case 2: ucsx=getUcsxFromUtf8f_2(buf-buf); utf8fpNext(buf,2); return ucsx;
-   case 3: ucsx=getUcsxFromUtf8f_3(buf-buf); utf8fpNext(buf,3); return ucsx;
-   case 4: ucsx=getUcsxFromUtf8f_4(buf-buf); utf8fpNext(buf,4); return ucsx;
-   case 5: ucsx=getUcsxFromUtf8f_5(buf-buf); utf8fpNext(buf,5); return ucsx;
-   case 6: ucsx=getUcsxFromUtf8f_6(buf-buf); utf8fpNext(buf,6); return ucsx;
-   case 7: ucsx=getUcsxFromUtf8f_7(buf-buf); utf8fpNext(buf,7); return ucsx;
-   default: buf->status=UTF8FS_INVALID;return UTF8F_CHECK; // Belső hiba.
+   case 0: up->status=UTF8FS_INVALID;return UTF8F_CHECK; // Invalid az uft8f kód. 
+   case 1: utf8fpNext(up,1);return h;
+   case 2: ucsx=getUcsxFromUtf8f_2(*up->ibuf); utf8fpNext(up,2); return ucsx;
+   case 3: ucsx=getUcsxFromUtf8f_3(*up->ibuf); utf8fpNext(up,3); return ucsx;
+   case 4: ucsx=getUcsxFromUtf8f_4(*up->ibuf); utf8fpNext(up,4); return ucsx;
+   case 5: ucsx=getUcsxFromUtf8f_5(*up->ibuf); utf8fpNext(up,5); return ucsx;
+   case 6: ucsx=getUcsxFromUtf8f_6(*up->ibuf); utf8fpNext(up,6); return ucsx;
+   case 7: ucsx=getUcsxFromUtf8f_7(*up->ibuf); utf8fpNext(up,7); return ucsx;
+   default: up->status=UTF8FS_INVALID;return UTF8F_CHECK; // Belső hiba.
    }
 }
 
 
 //*******************************************************************
-ucsf_t utf8fnextchar(utf8fp *buf)
+ucsf_t utf8fnextchar(utf8fp *up)
 /* 
  Veszi a következő utf8f karaktert.
  Ha a visszatérési érték nem UTF8F_CHECK, akkor az az buf->ucsf karakter.
  Ha UTF8F_CHECK, akkor a buf->status-ban van, hogy miért állt le:
- buf->status:
+ up->status:
   - UTF8FS_INVALID: Az utf8f karakter hibás.
   - UTF8FS_VALID: A karakter érvényes, és az ucsf-ben van.
   - Bármi más:  Az elemző további adatokra vár.: 
  */
 {
 
-   switch(buf->status)
+   switch(up->status)
    {
    case UTF8FS_INVALID: return UTF8F_CHECK;
    case UTF8FS_VALID  :
-      if (buf->l>=8) return utf8nextcharfull(buf);
-      buf->status=UTF8FS_S1;
+      if (up->ebuf-up->ibuf>=8) return utf8nextcharfull(up);
+      up->status=UTF8FS_S1; // Elkezdjük az elemzést.
       break;
    //default: // Minden más esetben folytatjuk onnan, ahol vagyunk.
    }
 }
 
 //*******************************************************************
+
+void main()
+{
+}
+
