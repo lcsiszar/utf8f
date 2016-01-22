@@ -7,6 +7,12 @@ dátum, a programozó neve, verzió (ha van) a változás leírása.
 Csiszár Levente <csiszar@eriadorber.hu>, 1998.01.13
 
 
+2016.01.22, Csiszár Levente, UTF8F 0.0.4-p1
+
+ - bin directory.
+
+ - Dokumentáció.
+
 2016.01.22, Csiszár Levente, UTF8F 0.0.4
 
  - Makefile, teszt program.
