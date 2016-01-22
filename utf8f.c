@@ -1,13 +1,13 @@
 //*******************************************************************
-// utf8f.c: utf8f-ucsf konverzió.
+// utf8f.c: utf8f-ucsx konverzió.
 //*******************************************************************
 
 
 /*
  32 bites számokkal kódolt karaktersorozatokat kódol át utf8-ra és vissza
- egyértelműen. A 32 bites karaktereket ucsf karakternek hívja.
+ egyértelműen. A 32 bites karaktereket ucsx karakternek hívja.
  MInden 32 bites számot lekódol.
- Egy utf8f karakter akkor érvényes kód, ha ucsf-re konvertálva, majd
+ Egy utf8f karakter akkor érvényes kód, ha ucsx-re konvertálva, majd
  vissza konvertálva ugyanazt az kódot kapjuk.
  
  Mj.: Érvénytelenség okai:
@@ -27,42 +27,9 @@ Tervezett rutinok:
 
 #include <stdint.h>
 #include <stddef.h>
+#include <stdio.h>
 
-typedef int8_t   utf8f_int8_t;
-typedef uint8_t  utf8f_uint8_t;
-typedef int16_t  utf8f_int16_t;
-typedef uint16_t utf8f_uint16_t;
-typedef int32_t  utf8f_int32_t;
-typedef uint32_t utf8f_uint32_t;
-typedef size_t   utf8f_size_t;
-//typedef ssize_t  utf8f_ssize_t; // Az unistd.h-ban van.
-// typedef bool     utf8f_bool;
-         
-typedef unsigned char utf8char_t;
-typedef uint32_t ucsf_t;
-
-//*******************************************************************
-/*
- Egy mutató struktúra, amit az utf8f puffer elemzéséhez használ.
- Akkor is ezt használja, amikor részletekben jön az input.
- buf: A puffer első bájtja
- ibuf: A puffer első feldolgozalan bájtja.
- ebuf: A puffer utolsó utáni bájtja.
- Hossz: ebuf-buf
- A hátralévő karakterek száma: ebuf-ibuf
-*/
-typedef struct _utf8fp
-{
-   int status;
-   utf8char_t *buf;
-   utf8char_t *ibuf; // A kövekező, még feldolgozatlan karakterre mutat.
-   utf8char_t *ebuf; // A buffer utolsó karaktere után mutat.
-   ucsf_t ucsf; // Itt (is) adja az eredményt, illetve itt tárolja a feldolgozás közbeni részeredményt.
-} utf8fp;
-
-
-//*******************************************************************
-#define UTF8F_CHECK  ((ucsf_t)-1) // Lehetne 0 is.
+#include "utf8f.h"
 
 //*******************************************************************
 #define UTF8FS_VALID   0
@@ -132,8 +99,9 @@ uuvvvvvv wwwwwwzz zzzzyyyy yyxxxxxx     0xffffffff
 #define UTF8L_6     0xffffffff // uuvvvvvv wwwwwwzz zzzzyyyy yyxxxxxx
 
 //*******************************************************************
-static int ucsx2utf8f(uint32_t ucsx,utf8char_t *buf, utf8f_size_t buflen)
+int ucsx2utf8f(uint32_t ucsx,utf8char_t *buf, utf8f_size_t buflen)
 {
+   // printf("ucsx: %u, UTF8L_1: %u\n",ucsx,UTF8L_1);
    if (ucsx<=UTF8L_1)
    {
       if (buflen<1) return 0;
@@ -230,41 +198,41 @@ static const char lenFromUtfHead[256] = { // 0= invalid header (0b10xxxxxx and 0
 //*******************************************************************
 // A getUCSxFromUtf8f_n(): felteszi, hogy van elég hely és a közbenső
 // (10xxxxxx bájtokban) a fejlécek rendben vannak.
-#define getUcsxFromUtf8f_2(p) ((((p)&UTF8_HEADMASK_2)<< 6)|((p)+1)&UTF8_CHARMASK)
+#define getUcsxFromUtf8f_2(p) ((((p)&UTF8_HEADMASK_2)<< 6)|(((p)+1)&UTF8_CHARMASK))
 #define getUcsxFromUtf8f_3(p) ((((p)&UTF8_HEADMASK_3)<<12)|   \
                                ((((p)+1)&UTF8_CHARMASK)<<6)|\
-                               ((p)+2)&UTF8_CHARMASK)
+                               (((p)+2)&UTF8_CHARMASK))
 #define getUcsxFromUtf8f_4(p) ((((p)&UTF8_HEADMASK_4)<<18)|   \
                                ((((p)+1)&UTF8_CHARMASK)<<12)|\
                                ((((p)+2)&UTF8_CHARMASK)<<6)|\
-                               ((p)+3)&UTF8_CHARMASK)
+                               (((p)+3)&UTF8_CHARMASK))
 
 #define getUcsxFromUtf8f_5(p) ((((p)&UTF8_HEADMASK_5)<<24)|   \
                                ((((p)+1)&UTF8_CHARMASK)<<18)|\
                                ((((p)+2)&UTF8_CHARMASK)<<12)|\
                                ((((p)+3)&UTF8_CHARMASK)<<6)|\
-                               ((p)+4)&UTF8_CHARMASK)
+                               (((p)+4)&UTF8_CHARMASK))
 
 #define getUcsxFromUtf8f_6(p) ((((p)&UTF8_HEADMASK_6)<<30)|   \
                                ((((p)+1)&UTF8_CHARMASK)<<24)|\
                                ((((p)+2)&UTF8_CHARMASK)<<18)|\
                                ((((p)+3)&UTF8_CHARMASK)<<12)|\
                                ((((p)+4)&UTF8_CHARMASK)<<6)|\
-                               ((p)+5)&UTF8_CHARMASK)
+                               (((p)+5)&UTF8_CHARMASK))
 #define getUcsxFromUtf8f_7(p) (0/*(((p)&UTF8_HEADMASK_7)<<36)*/|   \
                                ((((p)+1)&UTF8_CHARMASK)<<30)|\
                                ((((p)+2)&UTF8_CHARMASK)<<24)|\
                                ((((p)+3)&UTF8_CHARMASK)<<18)|\
                                ((((p)+4)&UTF8_CHARMASK)<<12)|\
                                ((((p)+5)&UTF8_CHARMASK)<<6)|\
-                               ((p)+6)&UTF8_CHARMASK)
+                               (((p)+6)&UTF8_CHARMASK))
 
 //*******************************************************************
-static ucsf_t utf8nextcharfull(utf8fp *up)
+static ucsx_t utf8nextcharfull(utf8fp *up)
 // Akkor hívja, amikor buf-ban biztosan van 8 hely.
 {
    utf8char_t h;
-   ucsf_t ucsx;
+   ucsx_t ucsx;
 
    switch(lenFromUtfHead[h=*up->ibuf])
    {
@@ -282,14 +250,14 @@ static ucsf_t utf8nextcharfull(utf8fp *up)
 
 
 //*******************************************************************
-ucsf_t utf8fnextchar(utf8fp *up)
+ucsx_t utf8fnextchar(utf8fp *up)
 /* 
  Veszi a következő utf8f karaktert.
- Ha a visszatérési érték nem UTF8F_CHECK, akkor az az buf->ucsf karakter.
+ Ha a visszatérési érték nem UTF8F_CHECK, akkor az az buf->ucsx karakter.
  Ha UTF8F_CHECK, akkor a buf->status-ban van, hogy miért állt le:
  up->status:
   - UTF8FS_INVALID: Az utf8f karakter hibás.
-  - UTF8FS_VALID: A karakter érvényes, és az ucsf-ben van.
+  - UTF8FS_VALID: A karakter érvényes, és az ucsx-ben van.
   - Bármi más:  Az elemző további adatokra vár.: 
  */
 {
@@ -303,11 +271,8 @@ ucsf_t utf8fnextchar(utf8fp *up)
       break;
    //default: // Minden más esetben folytatjuk onnan, ahol vagyunk.
    }
+   return UTF8FS_INVALID;
 }
 
 //*******************************************************************
-
-void main()
-{
-}
 

@@ -1,0 +1,8 @@
+#!/bin/sh
+
+# Write dependencies to the Makefile.
+
+MAKEFILE=Makefile
+gcc -MM *.c | 
+   cutnpaste $MAKEFILE '# Start depends by mdep2make' '# End depends by mdep2make' |
+   updatewrite $MAKEFILE
