@@ -33,11 +33,12 @@ typedef uint32_t ucsx_t;
 */
 typedef struct _utf8fp
 {
-   int status;
+   int state;
    utf8char_t *buf;
    utf8char_t *ibuf; // A kövekező, még feldolgozatlan karakterre mutat.
    utf8char_t *ebuf; // A buffer utolsó karaktere után mutat.
    ucsx_t ucsx; // Itt (is) adja az eredményt, illetve itt tárolja a feldolgozás közbeni részeredményt.
+   int utf8flen; // Az elemzés alatt álló utf8f karakter hossza. Csak akkor van helyesen kitöltve, ha a status UTF8FS_Sx.
 } utf8fp;
 
 
@@ -45,12 +46,16 @@ typedef struct _utf8fp
 #define UTF8F_CHECK  ((ucsx_t)-1) // Lehetne 0 is.
 
 #define UTF8FS_VALID   0 // Fix, nem lehet változtatni.
+#define UTF8FS_INVALID 1 // Fix, nem lehet változtatni.
 
 extern int ucsx2utf8f(uint32_t ucsx,utf8char_t *buf, utf8f_size_t buflen);
 
 //*******************************************************************
-extern void utf8fp_start(utf8fp *up,utf8char_t *buf,utf8f_size_t l);
-extern ucsx_t utf8fnextchar(utf8fp *up);
+extern void utf8fp_setup(utf8fp *up,utf8char_t *buf,utf8f_size_t l);
+extern void utf8fp_cont(utf8fp *up,utf8char_t *buf,utf8f_size_t l);
+extern void utf8fp_cont_l(utf8fp *up,utf8f_size_t l);
+extern ucsx_t utf8fp_nextchar(utf8fp *up); // Get next uft8f char.
+extern void utf8fp_nextbyte(utf8fp *up); // Jump an invalid byte.
 
 //*******************************************************************
 #endif // _UTF8F_H_

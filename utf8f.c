@@ -33,9 +33,17 @@ Tervezett rutinok:
 
 //*******************************************************************
 // #define UTF8FS_VALID   0
-#define UTF8FS_INVALID 1
+// #define UTF8FS_INVALID 1
+#define UTF8FS_NOSPACE 2 // Fix, nem lehet változtatni.
 
-#define UTF8FS_S1      2
+#define UTF8FS_S0      3
+#define UTF8FS_S1      4
+#define UTF8FS_S2      5
+#define UTF8FS_S3      6
+#define UTF8FS_S4      7
+#define UTF8FS_S5      8
+#define UTF8FS_S6      9
+#define UTF8FS_S7     10
 
 
 /*
@@ -89,6 +97,10 @@ uuvvvvvv wwwwwwzz zzzzyyyy yyxxxxxx     0xffffffff
 #define UTF8_HEADMASK_5   0x03 // 00000011 (mask 111110vv)
 #define UTF8_HEADMASK_6   0x01 // 00000001 (mask 1111110u)
 #define UTF8_HEADMASK_7   0x00 // 00000000 (mask 11111110)
+static int utf8headmasks[7]={
+   UTF8_HEADMASK_1,UTF8_HEADMASK_2,UTF8_HEADMASK_3,UTF8_HEADMASK_4,
+   UTF8_HEADMASK_5,UTF8_HEADMASK_6,UTF8_HEADMASK_7
+};
 
 
 #define UTF8L_1     0x0000007f // 00000000 00000000 00000000 0xxxxxxx
@@ -229,7 +241,7 @@ static const char lenFromUtfHead[256] = { // 0= invalid header (0b10xxxxxx and 0
                                 ((p[6])&UTF8_CHARMASK))
 
 //*******************************************************************
-static ucsx_t utf8nextcharfull(utf8fp *up)
+static ucsx_t utf8fp_nextcharfull(utf8fp *up)
 // Akkor hívja, amikor buf-ban biztosan van 8 hely.
 {
    utf8char_t h;
@@ -237,7 +249,7 @@ static ucsx_t utf8nextcharfull(utf8fp *up)
 
    switch(lenFromUtfHead[h=*up->ibuf])
    {
-   case 0: up->status=UTF8FS_INVALID;return UTF8F_CHECK; // Invalid az uft8f kód. 
+   case 0: up->state=UTF8FS_INVALID; up->ucsx=*up->ibuf; return UTF8F_CHECK; // Invalid az uft8f kód. 
    case 1: utf8fpNext(up,1);return h;
    case 2: ucsx=getUcsxFromUtf8f_2(up->ibuf); utf8fpNext(up,2); return ucsx;
    case 3: ucsx=getUcsxFromUtf8f_3(up->ibuf); utf8fpNext(up,3); return ucsx;
@@ -247,42 +259,117 @@ static ucsx_t utf8nextcharfull(utf8fp *up)
    case 7: ucsx=getUcsxFromUtf8f_7(up->ibuf); utf8fpNext(up,7); 
            if (ucsx==UTF8F_CHECK) up->ucsx=ucsx;
    return ucsx;
-   default: up->status=UTF8FS_INVALID;return UTF8F_CHECK; // Belső hiba.
+   default: up->state=UTF8FS_INVALID;up->ucsx=0;return UTF8F_CHECK; // Belső hiba.
    }
 }
 
-
 //*******************************************************************
-void utf8fp_start(utf8fp *up,utf8char_t *buf,utf8f_size_t l)
+static ucsx_t utf8fp_nextcharpart(utf8fp *up, int pos)
+// Az utf kódban a pos pozíciónál tartunk.
+// Ha a pos nem nulla, akkor az up->utf8flen ki van töltve.
 {
-   up->status=UTF8FS_VALID;
-   up->buf=up->ibuf=buf;
-   up->ebuf=buf+l;
-   up->ucsx=0;
+
+   if (up->ibuf>=up->ebuf) // No space
+   {
+      up->state=UTF8FS_NOSPACE;
+      return UTF8F_CHECK;
+   }
+
+   if (pos==0)
+   {
+      if (0==(up->utf8flen=lenFromUtfHead[*up->ibuf]))
+      {
+         up->state=UTF8FS_INVALID;
+         up->ucsx=*up->ibuf;
+         return UTF8F_CHECK;
+      }
+      up->ucsx=(*up->ibuf)&(utf8headmasks[up->utf8flen-1]);
+      pos++;
+      up->ibuf++;
+   }
+
+   for(;pos<up->utf8flen;)
+   {
+      if (up->ibuf>=up->ebuf) // No space
+      {
+         up->state=UTF8FS_S0+pos;
+         return UTF8F_CHECK;
+      }
+      up->ucsx=((up->ucsx)<<6)|((*up->ibuf)&UTF8_CHARMASK);
+      pos++;
+      up->ibuf++;
+   }
+
+   up->state=UTF8FS_VALID;
+   return up->ucsx;
 }
 
 //*******************************************************************
-ucsx_t utf8fnextchar(utf8fp *up)
+void utf8fp_setup(utf8fp *up,utf8char_t *buf,utf8f_size_t l)
+{
+   up->state=UTF8FS_VALID;
+   up->ucsx=0;
+
+   up->buf=up->ibuf=buf;
+   up->ebuf=buf+l;
+
+}
+
+//*******************************************************************
+void utf8fp_cont(utf8fp *up,utf8char_t *buf,utf8f_size_t l)
+{
+   up->buf=up->ibuf=buf;
+   up->ebuf=buf+l;
+}
+
+//*******************************************************************
+void utf8fp_cont_l(utf8fp *up,utf8f_size_t l)
+{
+   up->ebuf=up->buf+l;
+   up->ibuf=up->buf;
+}
+
+//*******************************************************************
+void utf8fp_nextbyte(utf8fp *up) // Jump next byte and reset state.
+{
+   up->state=UTF8FS_VALID;
+   up->ucsx=0;
+   if (up->ibuf<up->ebuf) up->ibuf++;
+}
+
+//*******************************************************************
+ucsx_t utf8fp_nextchar(utf8fp *up)
 /* 
  Veszi a következő utf8f karaktert.
  Ha a visszatérési érték nem UTF8F_CHECK, akkor az az buf->ucsx karakter.
- Ha UTF8F_CHECK, akkor a buf->status-ban van, hogy miért állt le:
- up->status:
+ Ha UTF8F_CHECK, akkor a buf->state-ban van, hogy miért állt le:
+ up->state:
   - UTF8FS_INVALID: Az utf8f karakter hibás.
   - UTF8FS_VALID: A karakter érvényes, és az ucsx-ben van.
   - Bármi más:  Az elemző további adatokra vár.: 
  */
 {
-
-   switch(up->status)
+   switch(up->state)
    {
    case UTF8FS_INVALID: return UTF8F_CHECK;
    case UTF8FS_VALID  :
-      if (up->ebuf-up->ibuf>=8) return utf8nextcharfull(up);
-      up->status=UTF8FS_S1; // Elkezdjük az elemzést.
-      break;
-   //default: // Minden más esetben folytatjuk onnan, ahol vagyunk.
+      if (up->ebuf-up->ibuf>=8) return utf8fp_nextcharfull(up);
+   return utf8fp_nextcharpart(up,0);
+   case UTF8FS_NOSPACE  :
+      up->state=UTF8FS_VALID;
+      if (up->ebuf-up->ibuf>=8) return utf8fp_nextcharfull(up);
+   return utf8fp_nextcharpart(up,0);
+   case UTF8FS_S0: 
+   case UTF8FS_S1: 
+   case UTF8FS_S2: 
+   case UTF8FS_S3: 
+   case UTF8FS_S4: 
+   case UTF8FS_S5: 
+   case UTF8FS_S6: 
+   case UTF8FS_S7: 
+   return utf8fp_nextcharpart(up,up->state-UTF8FS_S0);
    }
+   up->ucsx=0;
    return UTF8FS_INVALID;
 }
 

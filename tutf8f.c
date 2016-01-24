@@ -6,6 +6,7 @@
 #include <stddef.h>
 #include <stdio.h>
 #include <strings.h>
+#include <unistd.h>
 
 #include "utf8f.h"
 
@@ -60,10 +61,10 @@ void pUcsx(ucsx_t ucsx)
       utf8fp up;
       ucsx_t rUcsx;
       
-      utf8fp_start(&up,utf8f,9);
-      if (UTF8F_CHECK==(rUcsx=utf8fnextchar(&up)))
+      utf8fp_setup(&up,utf8f,9);
+      if (UTF8F_CHECK==(rUcsx=utf8fp_nextchar(&up)))
       {
-         if (up.status==UTF8FS_VALID)
+         if (up.state==UTF8FS_VALID)
          {
             rUcsx=up.ucsx;
             printf("Check! ");
@@ -86,7 +87,49 @@ void pUcsx(ucsx_t ucsx)
 }
 
 //*******************************************************************
-int main()
+#define BUFSIZE 8
+
+static void f_utf8f2ucsx(int ifid, int ofid)
+{
+   int n;
+   char buf[BUFSIZE];
+   utf8fp u;
+   ucsx_t ucsx;
+   
+   utf8fp_setup(&u,(utf8char_t*)buf,BUFSIZE);
+   
+   while(0<(n=read(ifid,buf,BUFSIZE)))
+   {
+      utf8fp_cont_l(&u,n);
+      while(1)
+      {
+         if (UTF8F_CHECK==(ucsx=utf8fp_nextchar(&u)))
+         {
+            if (u.state==UTF8FS_VALID)
+            {
+               fprintf(stderr,"check: %x\n",ucsx);
+               if (-1==write(ofid,&ucsx,sizeof(ucsx))) perror("Írási hiba!");
+            }
+            else if (u.state==UTF8FS_INVALID)
+            {
+               fprintf(stderr,"Invalid byte: %x\n",u.ucsx);
+               utf8fp_nextbyte(&u);
+               continue;
+            }
+            else
+               break;
+         }
+         else
+         {
+            fprintf(stderr,"norm: %x\n",ucsx);
+            if (-1==write(ofid,&ucsx,sizeof(ucsx))) perror("Írási hiba!");
+         }
+      } 
+   }
+}
+
+//*******************************************************************
+void t1() // Teszt ucsx->utf8f conversion: 1 character
 {
    ucsx_t ucsx;
    
@@ -96,6 +139,18 @@ int main()
       // break;
    }
    pUcsx(0xffffffff);
+}
+
+//*******************************************************************
+void t2() // Teszt utf8f->ucsx conversion: stdin->stdout
+{
+   f_utf8f2ucsx(0,1);
+}
+
+//*******************************************************************
+int main()
+{
+   t2();
    return 0;
 }
 

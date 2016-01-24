@@ -7,6 +7,13 @@ dátum, a programozó neve, verzió (ha van) a változás leírása.
 Csiszár Levente <csiszar@eriadorber.hu>, 1998.01.13
 
 
+2016.01.24, Csiszár Levente, UTF8F v0.0.6
+
+ - ta teszt program: utf8f->ucsx konverzó streamekre is működik.
+   Árvíztűrővel tesztelve a recode visszakonvertálja.
+
+ - clean
+
 2016.01.24, Csiszár Levente, UTF8F v0.0.5
 
  - utf8f->ucsx konverzó: az egy-egy eset letesztelve.
