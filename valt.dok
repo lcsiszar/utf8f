@@ -7,26 +7,30 @@ dátum, a programozó neve, verzió (ha van) a változás leírása.
 Csiszár Levente <csiszar@eriadorber.hu>, 1998.01.13
 
 
-2016.01.22, Csiszár Levente, UTF8F 0.0.4-p1
+2016.01.24, Csiszár Levente, UTF8F v0.0.5
+
+ - utf8f->ucsx konverzó: az egy-egy eset letesztelve.
+
+2016.01.22, Csiszár Levente, UTF8F v0.0.4-p1
 
  - bin directory.
 
  - Dokumentáció.
 
-2016.01.22, Csiszár Levente, UTF8F 0.0.4
+2016.01.22, Csiszár Levente, UTF8F v0.0.4
 
  - Makefile, teszt program.
 
  - Hibajavítások.
 
-2016.01.05, Csiszár Levente, UTF8F 0.0.3
+2016.01.05, Csiszár Levente, UTF8F v0.0.3
 
  - Pointeres implementáció.
 
-2016.01.05, Csiszár Levente, UTF8F 0.0.2
+2016.01.05, Csiszár Levente, UTF8F v0.0.2
 
  - github doksi.
 
-2016.01.05, Csiszár Levente, UTF8F 0.0.1
+2016.01.05, Csiszár Levente, UTF8F v0.0.1
 
  - Első verzó.

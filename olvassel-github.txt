@@ -11,7 +11,7 @@ git remote add origin https://github.com/lcsiszar/utf8f.git
 git push -u origin master
 
 - Azt még egyenlőre nem tudom, hogyan lehet ssh kulccsal bejelentkezni.
-  (Megvan)
+  (Benne van a leírásban: Megvan)
 
 - Így kell a repót letölteni egy szűz gépre:
 

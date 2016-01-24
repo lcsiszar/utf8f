@@ -56,6 +56,32 @@ void pUcsx(ucsx_t ucsx)
    // printf("\n   utf8f: %s",utf8f);
    printf("\n");
    
+   {
+      utf8fp up;
+      ucsx_t rUcsx;
+      
+      utf8fp_start(&up,utf8f,9);
+      if (UTF8F_CHECK==(rUcsx=utf8fnextchar(&up)))
+      {
+         if (up.status==UTF8FS_VALID)
+         {
+            rUcsx=up.ucsx;
+            printf("Check! ");
+            goto valid;
+         }
+         else
+         {
+            printf("Invalid uft8 kód!\n");
+         }
+      }
+      else
+      {
+         valid:
+         printf("rUcsx: Valid: %d,",rUcsx);
+         printfb6_uint32(rUcsx);
+         printf("%s\n",ucsx==rUcsx?"Egyezik":"Nem egyezik!");
+      }
+   }
    // write(1,utf8f,l);
 }
 

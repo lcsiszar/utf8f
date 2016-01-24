@@ -44,8 +44,13 @@ typedef struct _utf8fp
 //*******************************************************************
 #define UTF8F_CHECK  ((ucsx_t)-1) // Lehetne 0 is.
 
+#define UTF8FS_VALID   0 // Fix, nem lehet változtatni.
+
 extern int ucsx2utf8f(uint32_t ucsx,utf8char_t *buf, utf8f_size_t buflen);
 
+//*******************************************************************
+extern void utf8fp_start(utf8fp *up,utf8char_t *buf,utf8f_size_t l);
+extern ucsx_t utf8fnextchar(utf8fp *up);
 
 //*******************************************************************
 #endif // _UTF8F_H_
