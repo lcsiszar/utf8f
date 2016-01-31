@@ -7,6 +7,12 @@ dátum, a programozó neve, verzió (ha van) a változás leírása.
 Csiszár Levente <csiszar@eriadorber.hu>, 1998.01.13
 
 
+2016.01.31, Csiszár Levente, UTF8F v0.0.6-p1
+
+ - A teszt programok a test könyvtárba kerültek.
+
+ - libutf8f.lib
+
 2016.01.24, Csiszár Levente, UTF8F v0.0.6
 
  - ta teszt program: utf8f->ucsx konverzó streamekre is működik.
