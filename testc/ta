@@ -1,0 +1,10 @@
+#!/bin/bash
+
+m && bin/utf8f2ucsx"$@" <arvizturo.txt >arvizturo_ucsx.txt
+
+echo
+echo "Orig:"
+cat arvizturo.txt
+echo
+echo "Recoded:"
+recode UCS-4LE..utf8 <arvizturo_ucsx.txt
