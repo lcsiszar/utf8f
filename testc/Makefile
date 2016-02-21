@@ -45,10 +45,11 @@ objects := $(addsuffix .o, $(sources))
 all: $(exes)
 
 $(exe_utf8f2ucsx): utf8f2ucsx.o $(objects)
-	$(CC) $(CCFLAGS) -o $@ $< $(CCLIB)
+	echo "Objects: " $(objects) $^
+	$(CC) $(CCFLAGS) -o $@ $^ $(CCLIB)
 
 $(exe_tcr): tcr.o $(objects)
-	$(CC) $(CCFLAGS) -o $@ $< $(CCLIB)
+	$(CC) $(CCFLAGS) -o $@ $^ $(CCLIB)
 
 
 tmpclean:

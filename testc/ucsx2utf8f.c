@@ -15,49 +15,52 @@
 #include "utf8f.h"
  
 //*******************************************************************
-static void f_utf8f2ucsx(int ifid, int ofid,unsigned int bufsize)
+static void f_ucsx2utf8f(int ifid, int ofid,unsigned int bufsize,int bufsize8)
 {
    int n;
-   char buf[bufsize];
-   utf8fp u;
-   ucsx_t ucsx;
-   
-   utf8fp_setup(&u,(utf8char_t*)buf,bufsize);
-   
-   while(0<(n=read(ifid,buf,bufsize)))
+   uint32_t buf[bufsize];
+   utf8char_t utf8buf[bufsize8*8];
+   unsigned int iUtf8buf;
+   unsigned int i;
+
+   iutf8buf=0;
+   if (bufsize<=0 || bufsize8<=0)
    {
-      utf8fp_cont_l(&u,n);
-      while(1)
+      fprintf(stderr,"Invalid buffer size: bufsize: %d, bufsize8: %d\n",bufsize,bufsize8);
+      return;
+   }   
+
+   while(0<(n=read(ifid,buf,sizeof(buf))))
+   {
+      for(i=0;i<(unsigned int)n/sizeof(*buf))
       {
-         if (UTF8F_CHECK==(ucsx=utf8fp_nextchar(&u)))
+         int l;
+         
+         if (0==(l=ucsxutf8f(buf[i],utf8buf+iUtf8buf,sizeof(utf8buf)-iUtf8buf)))
          {
-            if (u.state==UTF8FS_VALID)
+            if (-1==write(ofid,utf8buf,iUtf8buf)) perror("Írási hiba!");
+            iUtf8buf=0;
+            if (0==(l=ucsxutf8f(buf[i],utf8buf+iUtf8buf,sizeof(utf8buf)-iUtf8buf)))
             {
-               DEBUG(fprintf(stderr,"check: %x\n",ucsx);)
-               if (-1==write(ofid,&ucsx,sizeof(ucsx))) perror("Írási hiba!");
+               fprintf(stderr,"Inner error: ucsxutf8f return 0.\n");
+               return;
             }
-            else if (u.state==UTF8FS_INVALID)
-            {
-               DEBUG(fprintf(stderr,"Invalid byte: %x\n",u.ucsx);)
-               utf8fp_nextbyte(&u);
-               continue;
-            }
-            else
-               break;
          }
-         else
-         {
-            DEBUG(fprintf(stderr,"norm: %x\n",ucsx);)
-            if (-1==write(ofid,&ucsx,sizeof(ucsx))) perror("Írási hiba!");
-         }
-      } 
+         iUtf8buf+=l;
+      }
    }
+   
+   if (iUtf8buf>0)
+   {
+      if (-1==write(ofid,utf8buf,iUtf8buf)) perror("Írási hiba!");
+   }
+
 }
 
 //*******************************************************************
 int main()
 {
-   f_utf8f2ucsx(0,1,8);
+   f_ucsx2utf8f(0,1,8);
    return 0;
 }
 
