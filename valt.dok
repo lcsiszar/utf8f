@@ -7,6 +7,10 @@ dátum, a programozó neve, verzió (ha van) a változás leírása.
 Csiszár Levente <csiszar@eriadorber.hu>, 1998.01.13
 
 
+2016.02.26, Csiszár Levente, UTF8F v0.0.6-p4
+
+ - test törölve, helyette testc.
+
 2016.02.21, Csiszár Levente, UTF8F v0.0.6-p3
 
  - ucsx2utf8f konverzió teszt program.

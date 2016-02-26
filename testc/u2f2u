@@ -14,17 +14,12 @@ fi
 
 bin/ucsx2utf8f <"$TF_UCSX" >"$TF_UTF8F"
 bin/utf8f2ucsx <"$TF_UTF8F" >"$TF_UCSX_UTF8F"
-#echo
-#echo "Orig:"
-#cat arvizturo.txt
 
-# if cmp "$TF_UCSX" "$TF_UTF8F"; then
-#if cmp "$TF_UCSX" "$TF_UCSX"; then
 if cmp "$TF_UCSX" "$TF_UCSX_UTF8F"; then
    echo "$?"
-   echo "Egyeznek"
+   echo "$0: OK"
 else
    echo "$?"
-   echo "Nem egyeznek"
+   echo "$0: Error"
 fi 
 

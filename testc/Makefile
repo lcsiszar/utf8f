@@ -2,10 +2,11 @@
 distdir:=$(shell if [ -f ../.sourcedir ]; then echo -n "../";cat ../.sourcedir; fi)
 export distdir
 
+exe_ucsx2utf8f=bin/ucsx2utf8f
 exe_utf8f2ucsx=bin/utf8f2ucsx
 exe_tcr=bin/tcr
 
-exes=$(exe_utf8f2ucsx) $(exe_tcr)
+exes=$(exe_ucsx2utf8f) $(exe_utf8f2ucsx) $(exe_tcr)
 scripts=
 
 prefix=tmpdir
@@ -43,6 +44,10 @@ objects := $(addsuffix .o, $(sources))
 # EXEC:=$(shell echo "sources: " $(sources) "Objects: " $(objects) 1>&2)
 
 all: $(exes)
+
+$(exe_ucsx2utf8f): ucsx2utf8f.o $(objects)
+	echo "Objects: " $(objects) $^
+	$(CC) $(CCFLAGS) -o $@ $^ $(CCLIB)
 
 $(exe_utf8f2ucsx): utf8f2ucsx.o $(objects)
 	echo "Objects: " $(objects) $^

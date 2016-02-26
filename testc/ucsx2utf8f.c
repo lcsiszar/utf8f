@@ -23,7 +23,7 @@ static void f_ucsx2utf8f(int ifid, int ofid,unsigned int bufsize,int bufsize8)
    unsigned int iUtf8buf;
    unsigned int i;
 
-   iutf8buf=0;
+   iUtf8buf=0;
    if (bufsize<=0 || bufsize8<=0)
    {
       fprintf(stderr,"Invalid buffer size: bufsize: %d, bufsize8: %d\n",bufsize,bufsize8);
@@ -32,15 +32,15 @@ static void f_ucsx2utf8f(int ifid, int ofid,unsigned int bufsize,int bufsize8)
 
    while(0<(n=read(ifid,buf,sizeof(buf))))
    {
-      for(i=0;i<(unsigned int)n/sizeof(*buf))
+      for(i=0;i<(unsigned int)n/sizeof(*buf);i++)
       {
          int l;
          
-         if (0==(l=ucsxutf8f(buf[i],utf8buf+iUtf8buf,sizeof(utf8buf)-iUtf8buf)))
+         if (0==(l=ucsx2utf8f(buf[i],utf8buf+iUtf8buf,sizeof(utf8buf)-iUtf8buf)))
          {
             if (-1==write(ofid,utf8buf,iUtf8buf)) perror("Írási hiba!");
             iUtf8buf=0;
-            if (0==(l=ucsxutf8f(buf[i],utf8buf+iUtf8buf,sizeof(utf8buf)-iUtf8buf)))
+            if (0==(l=ucsx2utf8f(buf[i],utf8buf+iUtf8buf,sizeof(utf8buf)-iUtf8buf)))
             {
                fprintf(stderr,"Inner error: ucsxutf8f return 0.\n");
                return;
@@ -60,7 +60,7 @@ static void f_ucsx2utf8f(int ifid, int ofid,unsigned int bufsize,int bufsize8)
 //*******************************************************************
 int main()
 {
-   f_ucsx2utf8f(0,1,8);
+   f_ucsx2utf8f(0,1,8,32);
    return 0;
 }
 
