@@ -1,7 +1,0 @@
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.5 (GNU/Linux)
-
-iD8DBQBOrF87kFlZN/bhW9gRApA9AJ42Q8KjwpJ7NaJnBZmOynGv0dqMvACeIs/c
-WqGJrAWPi1wTkPBbSlNJEIQ=
-=mcyR
------END PGP SIGNATURE-----

@@ -19,7 +19,7 @@ static void f_ucsx2utf8f(int ifid, int ofid,unsigned int bufsize,int bufsize8)
 {
    int n;
    uint32_t buf[bufsize];
-   utf8char_t utf8buf[bufsize8*8];
+   utf8fchar_t utf8buf[bufsize8*8];
    unsigned int iUtf8buf;
    unsigned int i;
 

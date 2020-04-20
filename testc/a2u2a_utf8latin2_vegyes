@@ -2,9 +2,9 @@
 
 TD=tmpdir
 
-TF_UTF8F=arvizturo.txt
-TF_UCSX="$TD/arvizturo_ucsx.txt"
-TF_UTF8F_UCSX="$TD/arvizturo_r.txt"
+TF_UTF8F=arvizturo_utf8latin2_vegyes.txt
+TF_UCSX="$TD/arvizturo_utf8latin2_vegyes_ucsx.txt"
+TF_UTF8F_UCSX="$TD/arvizturo_r_utf8latin2_vegyes.txt"
 
 mkdir -p "$TD"
 
@@ -13,7 +13,7 @@ if ! m; then
    exit 1
 fi
 
-bin/utf8f2ucsx <"$TF_UTF8F" >"$TF_UCSX"
+bin/utf8f2ucsx_latin2 <"$TF_UTF8F" >"$TF_UCSX"
 bin/ucsx2utf8f <"$TF_UCSX" >"$TF_UTF8F_UCSX"
 
 if cmp "$TF_UTF8F" "$TF_UTF8F_UCSX"; then

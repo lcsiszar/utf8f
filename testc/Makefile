@@ -4,9 +4,16 @@ export distdir
 
 exe_ucsx2utf8f=bin/ucsx2utf8f
 exe_utf8f2ucsx=bin/utf8f2ucsx
+exe_utf8f2ucsx_latin2=bin/utf8f2ucsx_latin2
 exe_tcr=bin/tcr
+exe_tcrutf8=bin/tcrutf8
+exe_tinvalid=bin/tinvalid
 
-exes=$(exe_ucsx2utf8f) $(exe_utf8f2ucsx) $(exe_tcr)
+exes=$(exe_ucsx2utf8f) \
+      $(exe_utf8f2ucsx) \
+      $(exe_utf8f2ucsx_latin2) \
+      $(exe_tcr) $(exe_tcrutf8) $(exe_tinvalid)
+      
 scripts=
 
 prefix=tmpdir
@@ -19,7 +26,7 @@ installprog_dir=install -d
 #installprog_dir=mkdir -p
 
                         
-#CCDEBUG=-g
+CCDEBUG=-g
 CCWARNING=-Wall
 CCOPTFLAGS=-O6
 
@@ -53,7 +60,17 @@ $(exe_utf8f2ucsx): utf8f2ucsx.o $(objects)
 	echo "Objects: " $(objects) $^
 	$(CC) $(CCFLAGS) -o $@ $^ $(CCLIB)
 
+$(exe_utf8f2ucsx_latin2): utf8f2ucsx_latin2.o $(objects)
+	echo "Objects: " $(objects) $^
+	$(CC) $(CCFLAGS) -o $@ $^ $(CCLIB)
+
 $(exe_tcr): tcr.o $(objects)
+	$(CC) $(CCFLAGS) -o $@ $^ $(CCLIB)
+
+$(exe_tcrutf8): tcrutf8.o $(objects)
+	$(CC) $(CCFLAGS) -o $@ $^ $(CCLIB)
+
+$(exe_tinvalid): tinvalid.o $(objects)
 	$(CC) $(CCFLAGS) -o $@ $^ $(CCLIB)
 
 
@@ -76,5 +93,11 @@ install: $(exes) $(scripts)
 
 # Start depends by mdep2make
 utf8f.o: ../utf8f.c ../utf8f.h
+tcr.o: tcr.c ../utf8f.h
+tcrutf8.o: tcrutf8.c ../utf8f.h
+tinvalid.o: tinvalid.c ../utf8f.h
+ucsx2utf8f.o: ucsx2utf8f.c ../utf8f.h
 utf8f2ucsx.o: utf8f2ucsx.c ../utf8f.h
+utf8f2ucsx_latin2.o: utf8f2ucsx_latin2.c ../utf8f.h \
+ ucsx_latin2_to_unicode.h
 # End depends by mdep2make

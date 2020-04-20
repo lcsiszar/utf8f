@@ -1,5 +1,5 @@
 //*******************************************************************
-// tcr.c: Test file creating.
+// tcrutf8.c: Utf8 test file creating.
 //*******************************************************************
 
 //*******************************************************************
@@ -27,7 +27,11 @@
 //*******************************************************************
 void p(uint32_t ucsx)
 {
-   if (-1==write(1,&ucsx,sizeof(ucsx)))
+   utf8fchar_t buf[7];
+   utf8f_size_t l;
+
+   if (0==(l=ucsx2utf8f(ucsx,buf,sizeof(buf)))) perror("Buffer overflow");
+   if (-1==write(1,buf,l))
    {
       perror("Write error!");
    }

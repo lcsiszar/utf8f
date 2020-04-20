@@ -1,0 +1,33 @@
+#!/bin/bash
+
+TD=tmpdir
+TF_UCSX=ucsxtest.txt
+TF_UTF8F="$TD/utf8ftest_rossz.txt"
+TF_UCSX_UTF8F="$TD/ucsxtest_rossz.txt"
+
+mkdir -p "$TD"
+
+if ! m; then
+   echo "Compile error"
+   exit 1
+fi
+
+f()
+{
+H=$1
+echo "H: $H"
+bin/ucsx2utf8f <"$TF_UCSX" | head -c-$H >"$TF_UTF8F"
+bin/utf8f2ucsx <"$TF_UTF8F" >"$TF_UCSX_UTF8F"
+}
+
+i=0
+n=$(bin/ucsx2utf8f <"$TF_UCSX" |wc -c)
+#set -x
+while [ $i -le $n ]; do
+   f $i
+   i=$((i+1))
+done
+
+
+
+

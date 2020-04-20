@@ -1,5 +1,5 @@
 //*******************************************************************
-// utf8f2ucsx.c: utf8f->ucsx conversion.
+// utf8f2ucsx_latin2.c: utf8f->ucsx conversion with latin2 handling.
 //*******************************************************************
 
 
@@ -15,9 +15,11 @@
 #include <stdlib.h>
  
 #include "utf8f.h"
+
+#include "ucsx_latin2_to_unicode.h"
  
 //*******************************************************************
-static void f_utf8f2ucsx(int ifid, int ofid,unsigned int bufsize)
+static void f_utf8f2ucsx_latin2(int ifid, int ofid,unsigned int bufsize)
 {
    int n;
    char buf[bufsize];
@@ -25,6 +27,7 @@ static void f_utf8f2ucsx(int ifid, int ofid,unsigned int bufsize)
    ucsx_t ucsx;
    
    utf8fp_setup(&u,(utf8fchar_t*)buf);
+   utf8fp_setmode(&u,UTF8FM_UTF8MIXCODE8,_ucsx_termcharset_latin2_to_unicode+128);
    
    while(0<(n=read(ifid,buf,bufsize)))
    {
@@ -60,7 +63,7 @@ static void f_utf8f2ucsx(int ifid, int ofid,unsigned int bufsize)
 //*******************************************************************
 int main()
 {
-   f_utf8f2ucsx(0,1,7000);
+   f_utf8f2ucsx_latin2(0,1,7000);
    return 0;
 }
 

@@ -6,6 +6,43 @@ dátum, a programozó neve, verzió (ha van) a változás leírása.
 
 Csiszár Levente <csiszar@eriadorber.hu>, 1998.01.13
 
+2020.04.06, Csiszár Levente, UTF8F v0.0.8 p1
+
+ - Teszt-ben <codetable>.h-k átnevezve, hogy ne ütközzön a régi codetable
+   elnevezésekkel.
+
+2020.04.06, Csiszár Levente, UTF8F v0.0.8
+
+ - codetable kész.
+
+2020.04.06, Csiszár Levente, UTF8F v0.0.7 p5
+
+ - codetable támogatás fejlesztés alatt.
+
+2020.04.05, Csiszár Levente, UTF8F v0.0.7 p4
+
+ - A nem minimál kódolású utf8 szekvenciákra hibát jelez.
+
+2020.04.05, Csiszár Levente, UTF8F v0.0.7 p3
+
+ - Az utf8 szekvenciákban 7 hossznál az első bájtban a középső 6 bitet is
+   ellenőrzi, hogy jók-e.
+
+2020.04.05, Csiszár Levente, UTF8F v0.0.7 p2
+
+ - Kész: Az utf8 szekvenciákban a felső biteket minden esetben ellenőrzi,
+   hogy jók-e.
+
+ - Fejlesztés alatt: Minimális kódolás ellenőrzés, mode, codetable.
+
+2020.04.03, Csiszár Levente, UTF8F v0.0.7 p1
+
+ - Fejlesztés alatt: Ellenőrzés, mode, codetable.
+
+2020.04.03, Csiszár Levente, UTF8F v0.0.7
+
+ - Bevezetve a state-re az UTF8FS_EOB, hogy a stream végén észre lehessen
+   venni a félbehagyott utf8 bájtsorozatot.
 
 2016.02.26, Csiszár Levente, UTF8F v0.0.6-p4
 

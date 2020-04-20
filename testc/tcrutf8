@@ -1,0 +1,20 @@
+#!/bin/bash
+
+TD=tmpdir
+
+TF=utf8test.txt
+TMPF="$TD/utf8ftest-t.txt"
+
+mkdir -p "$TD"
+
+m
+
+bin/tcrutf8 >"$TMPF"
+
+if [ ! -f "$F" ]; then
+   mv "$TMPF" "$TF"
+elif cmd "$TF" "$TMPF"; then
+   rm -rf "$TF"
+   mv "$TMPF" "$TF"
+fi
+

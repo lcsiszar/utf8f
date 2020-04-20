@@ -2,11 +2,10 @@
 // utf8f.c: utf8f-ucsx konverzió.
 //*******************************************************************
 
-
 /*
  32 bites számokkal kódolt karaktersorozatokat kódol át utf8-ra és vissza
  egyértelműen. A 32 bites karaktereket ucsx karakternek hívja.
- MInden 32 bites számot lekódol.
+ Minden 32 bites számot lekódol.
  Egy utf8f karakter akkor érvényes kód, ha ucsx-re konvertálva, majd
  vissza konvertálva ugyanazt az kódot kapjuk.
  
@@ -31,10 +30,16 @@ Tervezett rutinok:
 
 #include "utf8f.h"
 
+const char *utf8fp_version=UTF8F_VERSION;
+
+
+//*******************************************************************
+#define UTF8FMAXBYTELEN 7
+
 //*******************************************************************
 // #define UTF8FS_VALID   0
 // #define UTF8FS_INVALID 1
-#define UTF8FS_NOSPACE 2 // Fix, nem lehet változtatni.
+// #define UTF8FS_EOB     2 // End Of Buffer
 
 #define UTF8FS_S0      3
 #define UTF8FS_S1      4
@@ -78,8 +83,9 @@ uuvvvvvv wwwwwwzz zzzzyyyy yyxxxxxx     0xffffffff
 
 //*******************************************************************
 
-#define UTF8_CHARSIGN 0x80 // 10xxxxxx
-#define UTF8_CHARMASK 0x3f // 00111111
+#define UTF8_CHARSIGN     0x80 // 10xxxxxx
+#define UTF8_CHARMASK     0x3f // 00111111
+#define UTF8_CHARSIGNMASK 0xc0 // 11000000
 
 #define UTF8_HEADSIGN 0xc0 // 11xxxxxx
 
@@ -102,7 +108,6 @@ static int utf8headmasks[7]={
    UTF8_HEADMASK_5,UTF8_HEADMASK_6,UTF8_HEADMASK_7
 };
 
-
 #define UTF8L_1     0x0000007f // 00000000 00000000 00000000 0xxxxxxx
 #define UTF8L_2     0x000007ff // 00000000 00000000 00000yyy yyxxxxxx
 #define UTF8L_3     0x0000ffff // 00000000 00000000 zzzzyyyy yyxxxxxx
@@ -112,69 +117,69 @@ static int utf8headmasks[7]={
 #define UTF8L_7     0xffffffff // uuvvvvvv wwwwwwzz zzzzyyyy yyxxxxxx
 
 //*******************************************************************
-int ucsx2utf8f(uint32_t ucsx,utf8char_t *buf, utf8f_size_t buflen)
+int ucsx2utf8f(uint32_t ucsx,utf8fchar_t *buf, utf8f_size_t buflen)
 {
    // printf("ucsx: %u, UTF8L_1: %u\n",ucsx,UTF8L_1);
    if (ucsx<=UTF8L_1)
    {
       if (buflen<1) return 0;
-      buf[0]=(utf8char_t)ucsx;
+      buf[0]=(utf8fchar_t)ucsx;
       return 1;
    }
    else if (ucsx<=UTF8L_2)
    {
       if (buflen<2) return 0;
-      buf[0]=(utf8char_t)((ucsx>>6)|UTF8_HEADSIGN_2);
-      buf[1]=(utf8char_t)((ucsx&UTF8_CHARMASK)|UTF8_CHARSIGN);
+      buf[0]=(utf8fchar_t)((ucsx>>6)|UTF8_HEADSIGN_2);
+      buf[1]=(utf8fchar_t)((ucsx&UTF8_CHARMASK)|UTF8_CHARSIGN);
       return 2;
    }
    else if (ucsx<=UTF8L_3)
    {
       if (buflen<3) return 0;
-      buf[0]=(utf8char_t)((ucsx>>12)|UTF8_HEADSIGN_3);
-      buf[1]=(utf8char_t)(((ucsx>>6)&UTF8_CHARMASK)|UTF8_CHARSIGN);
-      buf[2]=(utf8char_t)((ucsx&UTF8_CHARMASK)|UTF8_CHARSIGN);
+      buf[0]=(utf8fchar_t)((ucsx>>12)|UTF8_HEADSIGN_3);
+      buf[1]=(utf8fchar_t)(((ucsx>>6)&UTF8_CHARMASK)|UTF8_CHARSIGN);
+      buf[2]=(utf8fchar_t)((ucsx&UTF8_CHARMASK)|UTF8_CHARSIGN);
       return 3;
    }
    else if (ucsx<=UTF8L_4)
    {
       if (buflen<4) return 0;
-      buf[0]=(utf8char_t)((ucsx>>18)|UTF8_HEADSIGN_4);
-      buf[1]=(utf8char_t)(((ucsx>>12)&UTF8_CHARMASK)|UTF8_CHARSIGN);
-      buf[2]=(utf8char_t)(((ucsx>>6)&UTF8_CHARMASK)|UTF8_CHARSIGN);
-      buf[3]=(utf8char_t)((ucsx&UTF8_CHARMASK)|UTF8_CHARSIGN);
+      buf[0]=(utf8fchar_t)((ucsx>>18)|UTF8_HEADSIGN_4);
+      buf[1]=(utf8fchar_t)(((ucsx>>12)&UTF8_CHARMASK)|UTF8_CHARSIGN);
+      buf[2]=(utf8fchar_t)(((ucsx>>6)&UTF8_CHARMASK)|UTF8_CHARSIGN);
+      buf[3]=(utf8fchar_t)((ucsx&UTF8_CHARMASK)|UTF8_CHARSIGN);
       return 4;
    }
    else if (ucsx<=UTF8L_5)
    {
       if (buflen<5) return 0;
-      buf[0]=(utf8char_t)((ucsx>>24)|UTF8_HEADSIGN_5);
-      buf[1]=(utf8char_t)(((ucsx>>18)&UTF8_CHARMASK)|UTF8_CHARSIGN);
-      buf[2]=(utf8char_t)(((ucsx>>12)&UTF8_CHARMASK)|UTF8_CHARSIGN);
-      buf[3]=(utf8char_t)(((ucsx>>6)&UTF8_CHARMASK)|UTF8_CHARSIGN);
-      buf[4]=(utf8char_t)((ucsx&UTF8_CHARMASK)|UTF8_CHARSIGN);
+      buf[0]=(utf8fchar_t)((ucsx>>24)|UTF8_HEADSIGN_5);
+      buf[1]=(utf8fchar_t)(((ucsx>>18)&UTF8_CHARMASK)|UTF8_CHARSIGN);
+      buf[2]=(utf8fchar_t)(((ucsx>>12)&UTF8_CHARMASK)|UTF8_CHARSIGN);
+      buf[3]=(utf8fchar_t)(((ucsx>>6)&UTF8_CHARMASK)|UTF8_CHARSIGN);
+      buf[4]=(utf8fchar_t)((ucsx&UTF8_CHARMASK)|UTF8_CHARSIGN);
       return 5;
    }
    else if (ucsx<=UTF8L_6)
    {
       if (buflen<6) return 0;
-      buf[0]=(utf8char_t)((ucsx>>30)|UTF8_HEADSIGN_6);
-      buf[1]=(utf8char_t)(((ucsx>>24)&UTF8_CHARMASK)|UTF8_CHARSIGN);
-      buf[2]=(utf8char_t)(((ucsx>>18)&UTF8_CHARMASK)|UTF8_CHARSIGN);
-      buf[3]=(utf8char_t)(((ucsx>>12)&UTF8_CHARMASK)|UTF8_CHARSIGN);
-      buf[4]=(utf8char_t)(((ucsx>>6)&UTF8_CHARMASK)|UTF8_CHARSIGN);
-      buf[5]=(utf8char_t)((ucsx&UTF8_CHARMASK)|UTF8_CHARSIGN);
+      buf[0]=(utf8fchar_t)((ucsx>>30)|UTF8_HEADSIGN_6);
+      buf[1]=(utf8fchar_t)(((ucsx>>24)&UTF8_CHARMASK)|UTF8_CHARSIGN);
+      buf[2]=(utf8fchar_t)(((ucsx>>18)&UTF8_CHARMASK)|UTF8_CHARSIGN);
+      buf[3]=(utf8fchar_t)(((ucsx>>12)&UTF8_CHARMASK)|UTF8_CHARSIGN);
+      buf[4]=(utf8fchar_t)(((ucsx>>6)&UTF8_CHARMASK)|UTF8_CHARSIGN);
+      buf[5]=(utf8fchar_t)((ucsx&UTF8_CHARMASK)|UTF8_CHARSIGN);
       return 6;
    }
    
    if (buflen<7) return 0;
    buf[0]=UTF8_HEADSIGN_7;
-   buf[1]=(utf8char_t)(((ucsx>>30)&UTF8_CHARMASK)|UTF8_CHARSIGN);
-   buf[2]=(utf8char_t)(((ucsx>>24)&UTF8_CHARMASK)|UTF8_CHARSIGN);
-   buf[3]=(utf8char_t)(((ucsx>>18)&UTF8_CHARMASK)|UTF8_CHARSIGN);
-   buf[4]=(utf8char_t)(((ucsx>>12)&UTF8_CHARMASK)|UTF8_CHARSIGN);
-   buf[5]=(utf8char_t)(((ucsx>>6)&UTF8_CHARMASK)|UTF8_CHARSIGN);
-   buf[6]=(utf8char_t)((ucsx&UTF8_CHARMASK)|UTF8_CHARSIGN);
+   buf[1]=(utf8fchar_t)(((ucsx>>30)&UTF8_CHARMASK)|UTF8_CHARSIGN);
+   buf[2]=(utf8fchar_t)(((ucsx>>24)&UTF8_CHARMASK)|UTF8_CHARSIGN);
+   buf[3]=(utf8fchar_t)(((ucsx>>18)&UTF8_CHARMASK)|UTF8_CHARSIGN);
+   buf[4]=(utf8fchar_t)(((ucsx>>12)&UTF8_CHARMASK)|UTF8_CHARSIGN);
+   buf[5]=(utf8fchar_t)(((ucsx>>6)&UTF8_CHARMASK)|UTF8_CHARSIGN);
+   buf[6]=(utf8fchar_t)((ucsx&UTF8_CHARMASK)|UTF8_CHARSIGN);
    return 7;
 }
 
@@ -206,62 +211,191 @@ static const char lenFromUtfHead[256] = { // 0= invalid header (0b10xxxxxx and 0
 
 
 //*******************************************************************
-#define utf8fpNext(up,i); ((up)->ibuf+=i)
+#define utf8fpNext(up,i) ((up)->ibuf+=i)
+
+//*******************************************************************
+#define utf8fpCheck_1i(p,i) (UTF8_CHARSIGN==((p)[i]&UTF8_CHARSIGNMASK))
+
+#define utf8fpCheck_2(p) utf8fpCheck_1i(p,1)
+#define utf8fpCheck_3(p) (utf8fpCheck_2(p) && utf8fpCheck_1i(p,2))
+#define utf8fpCheck_4(p) (utf8fpCheck_3(p) && utf8fpCheck_1i(p,3))
+#define utf8fpCheck_5(p) (utf8fpCheck_4(p) && utf8fpCheck_1i(p,4))
+#define utf8fpCheck_6(p) (utf8fpCheck_5(p) && utf8fpCheck_1i(p,5))
+
+// Mj.: 7 hosszú utf8-nál a második bájt középső 6 bitje nulla kell legyen.
+#define utf8fpCheck_7(p) (utf8fpCheck_6(p) && utf8fpCheck_1i(p,6) && ((p)[1]&0x3c)==0)
 
 //*******************************************************************
 // A getUCSxFromUtf8f_n(): felteszi, hogy van elég hely és a közbenső
 // (10xxxxxx bájtokban) a fejlécek rendben vannak.
-#define getUcsxFromUtf8f_2(p) ((((p[0])&UTF8_HEADMASK_2)<< 6)|((p[1])&UTF8_CHARMASK))
-#define getUcsxFromUtf8f_3(p) ((((p[0])&UTF8_HEADMASK_3)<<12)|   \
-                               (((p[1])&UTF8_CHARMASK)<<6)|\
-                                ((p[2])&UTF8_CHARMASK))
-#define getUcsxFromUtf8f_4(p) ((((p[0])&UTF8_HEADMASK_4)<<18)|   \
-                               (((p[1])&UTF8_CHARMASK)<<12)|\
-                               (((p[2])&UTF8_CHARMASK)<<6)|\
-                                ((p[3])&UTF8_CHARMASK))
+#define getUcsxFromUtf8f_2(p) (((((p)[0])&UTF8_HEADMASK_2)<< 6)|(((p)[1])&UTF8_CHARMASK))
+#define getUcsxFromUtf8f_3(p) (((((p)[0])&UTF8_HEADMASK_3)<<12)|   \
+                               ((((p)[1])&UTF8_CHARMASK)<<6)|\
+                                (((p)[2])&UTF8_CHARMASK))
+#define getUcsxFromUtf8f_4(p) (((((p)[0])&UTF8_HEADMASK_4)<<18)|   \
+                               ((((p)[1])&UTF8_CHARMASK)<<12)|\
+                               ((((p)[2])&UTF8_CHARMASK)<<6)|\
+                                (((p)[3])&UTF8_CHARMASK))
 
-#define getUcsxFromUtf8f_5(p) ((((p[0])&UTF8_HEADMASK_5)<<24)|   \
-                               (((p[1])&UTF8_CHARMASK)<<18)|\
-                               (((p[2])&UTF8_CHARMASK)<<12)|\
-                               (((p[3])&UTF8_CHARMASK)<<6)|\
-                                ((p[4])&UTF8_CHARMASK))
+#define getUcsxFromUtf8f_5(p) (((((p)[0])&UTF8_HEADMASK_5)<<24)|   \
+                               ((((p)[1])&UTF8_CHARMASK)<<18)|\
+                               ((((p)[2])&UTF8_CHARMASK)<<12)|\
+                               ((((p)[3])&UTF8_CHARMASK)<<6)|\
+                                (((p)[4])&UTF8_CHARMASK))
 
-#define getUcsxFromUtf8f_6(p) ((((p[0])&UTF8_HEADMASK_6)<<30)|   \
-                               (((p[1])&UTF8_CHARMASK)<<24)|\
-                               (((p[2])&UTF8_CHARMASK)<<18)|\
-                               (((p[3])&UTF8_CHARMASK)<<12)|\
-                               (((p[4])&UTF8_CHARMASK)<<6)|\
-                                ((p[5])&UTF8_CHARMASK))
-#define getUcsxFromUtf8f_7(p) (0/*(((p[0])&UTF8_HEADMASK_7)<<36)*/|   \
-                               (((p[1])&UTF8_CHARMASK)<<30)|\
-                               (((p[2])&UTF8_CHARMASK)<<24)|\
-                               (((p[3])&UTF8_CHARMASK)<<18)|\
-                               (((p[4])&UTF8_CHARMASK)<<12)|\
-                               (((p[5])&UTF8_CHARMASK)<<6)|\
-                                ((p[6])&UTF8_CHARMASK))
+#define getUcsxFromUtf8f_6(p) (((((p)[0])&UTF8_HEADMASK_6)<<30)|   \
+                               ((((p)[1])&UTF8_CHARMASK)<<24)|\
+                               ((((p)[2])&UTF8_CHARMASK)<<18)|\
+                               ((((p)[3])&UTF8_CHARMASK)<<12)|\
+                               ((((p)[4])&UTF8_CHARMASK)<<6)|\
+                                (((p)[5])&UTF8_CHARMASK))
+#define getUcsxFromUtf8f_7(p) (0/*((((p)[0])&UTF8_HEADMASK_7)<<36)*/|   \
+                               ((((p)[1])&UTF8_CHARMASK)<<30)|\
+                               ((((p)[2])&UTF8_CHARMASK)<<24)|\
+                               ((((p)[3])&UTF8_CHARMASK)<<18)|\
+                               ((((p)[4])&UTF8_CHARMASK)<<12)|\
+                               ((((p)[5])&UTF8_CHARMASK)<<6)|\
+                                (((p)[6])&UTF8_CHARMASK))
+
+//*******************************************************************
+static ucsx_t getUcsxFromCode8(utf8fp *up,utf8fchar_t c)
+{
+   if (c<128) return c;
+   if (up->codetable==NULL) return c;
+   return up->codetable[c-128];
+}
+
+//*******************************************************************
+static ucsx_t invalidutf8f_skip(utf8fp *up,utf8fchar_t c, int step)
+// Amikor invalid az utf8 szekvencia következő bájtja és csak egyet vagy
+// nullát kell lépni.
+{
+   switch(up->mode)
+   {
+   case UTF8FM_UTF8FIXED:
+      up->state=UTF8FS_INVALID;
+      up->ucsx=c;
+   return UTF8F_CHECK;
+   case UTF8FM_UTF8MIXCODE8:
+      up->state=UTF8FS_VALID;
+      up->ucsx=getUcsxFromCode8(up,c);
+      utf8fpNext(up,step);
+      return up->ucsx;
+   case UTF8FM_CODE8:
+      up->code8=UTF8FCMCR_CODE8;
+      up->state=UTF8FS_VALID;
+      up->ucsx=getUcsxFromCode8(up,c);
+      utf8fpNext(up,step);
+      return up->ucsx;
+   }
+   // Ide nem jühet.
+   up->state=UTF8FS_INVALID;
+   up->ucsx=c;
+   return UTF8F_CHECK;
+}
+
+//*******************************************************************
+static ucsx_t invalidutf8f_pos(utf8fp *up,utf8fchar_t c,int pos)
+// Amikor invalid az egész utf8 szekvencia és a pos-nál derül ki.
+// Az ibuf a pos-ra mutat.
+{
+   switch(up->mode)
+   {
+   case UTF8FM_UTF8FIXED:
+      up->state=UTF8FS_INVALID;
+      up->ucsx=c;
+   return UTF8F_CHECK;
+   case UTF8FM_UTF8MIXCODE8:
+      up->state=UTF8FS_VALID;
+      if (pos==0)
+      {
+         up->ucsx=getUcsxFromCode8(up,c);
+         utf8fpNext(up,1);
+         return up->ucsx;
+      }
+      up->code8=UTF8FCMCR_UTF8FCBUF;
+      up->ucsx=getUcsxFromCode8(up,up->cbuf[0]);
+      up->cbufpos=1;
+      up->cbuflen=pos;
+      return up->ucsx;
+   case UTF8FM_CODE8:
+      up->state=UTF8FS_VALID;
+      if (pos==0)
+      {
+         up->ucsx=getUcsxFromCode8(up,c);
+         utf8fpNext(up,1);
+         up->code8=UTF8FCMCR_CODE8;
+         return up->ucsx;
+      }
+      up->code8=UTF8FCMCR_UTF8FCODE8;
+      up->ucsx=getUcsxFromCode8(up,up->cbuf[0]);
+      up->cbufpos=1;
+      up->cbuflen=pos;
+      return up->ucsx;
+   }
+   // Ide nem jöhet.
+   up->state=UTF8FS_INVALID;
+   up->ucsx=c;
+   return UTF8F_CHECK;
+}
 
 //*******************************************************************
 static ucsx_t utf8fp_nextcharfull(utf8fp *up)
-// Akkor hívja, amikor buf-ban biztosan van 8 hely.
+// Akkor hívja, amikor buf-ban biztosan van 7 hely.
+// A state-nek UTF8FS_VALID-nak kell lennie.
 {
-   utf8char_t h;
+   utf8fchar_t h;
    ucsx_t ucsx;
 
-   switch(lenFromUtfHead[h=*up->ibuf])
+   // fprintf(stderr,"nextcharfull: %x, l: %d,check: %d, 1: %x, chs: %x\n",
+   //    *up->ibuf,lenFromUtfHead[h=*up->ibuf],
+   //    utf8fpCheck_2(up->ibuf),
+   //    up->ibuf[1],
+   //    (up->ibuf[1])&UTF8_CHARSIGN);
+   switch(up->utf8flen=lenFromUtfHead[h=*up->ibuf])
    {
-   case 0: up->state=UTF8FS_INVALID; up->ucsx=*up->ibuf; return UTF8F_CHECK; // Invalid az uft8f kód. 
+   case 0: goto invalid;
    case 1: utf8fpNext(up,1);return h;
-   case 2: ucsx=getUcsxFromUtf8f_2(up->ibuf); utf8fpNext(up,2); return ucsx;
-   case 3: ucsx=getUcsxFromUtf8f_3(up->ibuf); utf8fpNext(up,3); return ucsx;
-   case 4: ucsx=getUcsxFromUtf8f_4(up->ibuf); utf8fpNext(up,4); return ucsx;
-   case 5: ucsx=getUcsxFromUtf8f_5(up->ibuf); utf8fpNext(up,5); return ucsx;
-   case 6: ucsx=getUcsxFromUtf8f_6(up->ibuf); utf8fpNext(up,6); return ucsx;
-   case 7: ucsx=getUcsxFromUtf8f_7(up->ibuf); utf8fpNext(up,7); 
+   case 2: if(!utf8fpCheck_2(up->ibuf)) goto invalid;
+           ucsx=getUcsxFromUtf8f_2(up->ibuf);
+           if (!(ucsx&~UTF8L_1)) goto invalid; // Nem minimál kódolás.
+           utf8fpNext(up,2);
+   return ucsx;
+   case 3: if(!utf8fpCheck_3(up->ibuf)) goto invalid;
+           ucsx=getUcsxFromUtf8f_3(up->ibuf);
+           if (!(ucsx&~UTF8L_2)) goto invalid; // Nem minimál kódolás.
+           utf8fpNext(up,3);
+   return ucsx;
+   case 4: if(!utf8fpCheck_4(up->ibuf)) goto invalid;
+           ucsx=getUcsxFromUtf8f_4(up->ibuf);
+           if (!(ucsx&~UTF8L_3)) goto invalid; // Nem minimál kódolás.
+           utf8fpNext(up,4);
+   return ucsx;
+   case 5: if(!utf8fpCheck_5(up->ibuf)) goto invalid;
+           ucsx=getUcsxFromUtf8f_5(up->ibuf);
+           if (!(ucsx&~UTF8L_4)) goto invalid; // Nem minimál kódolás.
+           utf8fpNext(up,5);
+   return ucsx;
+   case 6: if(!utf8fpCheck_6(up->ibuf)) goto invalid;
+           ucsx=getUcsxFromUtf8f_6(up->ibuf);
+           if (!(ucsx&~UTF8L_5)) goto invalid; // Nem minimál kódolás.
+           utf8fpNext(up,6);
+   return ucsx;
+   case 7: if(!utf8fpCheck_7(up->ibuf)) goto invalid;
+           ucsx=getUcsxFromUtf8f_7(up->ibuf);
+           if (!(ucsx&~UTF8L_6)) goto invalid; // Nem minimál kódolás.
+           utf8fpNext(up,7); 
            if (ucsx==UTF8F_CHECK) up->ucsx=ucsx;
    return ucsx;
-   default: up->state=UTF8FS_INVALID;up->ucsx=0;return UTF8F_CHECK; // Belső hiba.
    }
+   // Belső hiba.
+   return invalidutf8f_skip(up,0,1);
+   invalid: // Invalid az uft8f kód.
+   return invalidutf8f_skip(up,*up->ibuf,1);
 }
+
+//*******************************************************************
+#define store2cbuf(up,pos,c) ((up)->cbuf[(pos)]=(c))
 
 //*******************************************************************
 static ucsx_t utf8fp_nextcharpart(utf8fp *up, int pos)
@@ -271,7 +405,7 @@ static ucsx_t utf8fp_nextcharpart(utf8fp *up, int pos)
 
    if (up->ibuf>=up->ebuf) // No space
    {
-      up->state=UTF8FS_NOSPACE;
+      if (up->state==UTF8FS_VALID) up->state=UTF8FS_EOB;
       return UTF8F_CHECK;
    }
 
@@ -279,15 +413,24 @@ static ucsx_t utf8fp_nextcharpart(utf8fp *up, int pos)
    {
       if (0==(up->utf8flen=lenFromUtfHead[*up->ibuf]))
       {
-         up->state=UTF8FS_INVALID;
-         up->ucsx=*up->ibuf;
-         return UTF8F_CHECK;
+         return invalidutf8f_skip(up,*up->ibuf,1);
       }
+      store2cbuf(up,pos,*up->ibuf);
       up->ucsx=(*up->ibuf)&(utf8headmasks[up->utf8flen-1]);
       pos++;
       up->ibuf++;
    }
+   
+   // Itt nem lehet else if(!)
+   if (pos==1 && up->utf8flen==7 && ((*up->ibuf)&0x3c)!=0)
+   {
+      // 7 hosszú utf8-nál a második bájt középső 6 bitje nulla kell legyen.
 
+      return invalidutf8f_skip(up,up->cbuf[0],0); // Ezt csak azért lehet
+                                                  // megcsinálni, mert pos==1
+
+   }
+      
    for(;pos<up->utf8flen;)
    {
       if (up->ibuf>=up->ebuf) // No space
@@ -295,9 +438,31 @@ static ucsx_t utf8fp_nextcharpart(utf8fp *up, int pos)
          up->state=UTF8FS_S0+pos;
          return UTF8F_CHECK;
       }
+      // if (up->utf8flen==7) fprintf(stderr,"utf8fp_nextcharpart: pos: %d, ibuf, 0x%x, %d\n",pos,*up->ibuf,utf8fpCheck_1i(up->ibuf,0));
+      store2cbuf(up,pos,*up->ibuf);
+      if (!utf8fpCheck_1i(up->ibuf,0))
+      {
+         return invalidutf8f_pos(up,0,pos);
+         up->state=UTF8FS_INVALID;
+         return UTF8F_CHECK;
+      }
       up->ucsx=((up->ucsx)<<6)|((*up->ibuf)&UTF8_CHARMASK);
       pos++;
       up->ibuf++;
+   }
+   // if (up->utf8flen==7) fprintf(stderr,"utf8fp_nextcharpart: ucsx: %u, 0x%x\n",up->ucsx,up->ucsx);
+
+   if (up->utf8flen>1)
+   {
+      static unsigned masks[]={UTF8L_1,UTF8L_2,UTF8L_3,UTF8L_4,UTF8L_5,UTF8L_6};
+
+      // fprintf(stderr,"len(masks): %d, utf8flen-2: %d\n",sizeof(masks)/sizeof(*masks),up->utf8flen-2);
+      if (!(up->ucsx&~(masks[up->utf8flen-2])))
+      { // Nem minimál kódolás.
+         return invalidutf8f_pos(up,0,pos);
+         up->state=UTF8FS_INVALID;
+         return UTF8F_CHECK;
+      } 
    }
 
    up->state=UTF8FS_VALID;
@@ -305,18 +470,58 @@ static ucsx_t utf8fp_nextcharpart(utf8fp *up, int pos)
 }
 
 //*******************************************************************
-void utf8fp_setup(utf8fp *up,utf8char_t *buf,utf8f_size_t l)
+#ifdef NEMKELL
+static ucsx_t utf8fp_nextcharpart(utf8fp *up, int pos)
 {
-   up->state=UTF8FS_VALID;
+   ucsx_t w;
+   fprintf(stderr,"utf8fp_nextcharpart(s): s: %d,pos: %d, ibuf: %p, ebuf: %p\n",
+          up->state,pos,up->ibuf,up->ebuf);
+
+   w=_utf8fp_nextcharpart(up,pos);
+   fprintf(stderr,"utf8fp_nextcharpart(e): r: %xu, s: %d,pos: %d, ibuf: %p, ebuf: %p\n",
+          w,up->state,pos,up->ibuf,up->ebuf);
+
+   return w;
+}
+#endif
+
+//*******************************************************************
+void utf8fp_setup(utf8fp *up,utf8fchar_t *buf)
+{
+   up->state=UTF8FS_EOB;
+   up->mode=UTF8FM_UTF8FIXED;
+   up->code8=UTF8FCMCR_UTF8F;
+   up->codetable=NULL;
    up->ucsx=0;
 
    up->buf=up->ibuf=buf;
-   up->ebuf=buf+l;
+   up->ebuf=buf;
+
+   up->cbufpos=0;
+   up->cbuflen=0;
 
 }
 
 //*******************************************************************
-void utf8fp_cont(utf8fp *up,utf8char_t *buf,utf8f_size_t l)
+void utf8fp_setmode(utf8fp *up,int mode,ucsx_t codetable[128])
+{
+
+   switch(mode)
+   {
+   case UTF8FM_UTF8FIXED: up->mode=UTF8FM_UTF8FIXED; break;
+   case UTF8FM_UTF8MIXCODE8:
+      up->mode=UTF8FM_UTF8MIXCODE8;
+      up->codetable=codetable;
+   break;
+   case UTF8FM_CODE8:
+      up->mode=UTF8FM_CODE8;
+      up->codetable=codetable;
+   break;
+   }
+}
+
+//*******************************************************************
+void utf8fp_cont(utf8fp *up,utf8fchar_t *buf,utf8f_size_t l)
 {
    up->buf=up->ibuf=buf;
    up->ebuf=buf+l;
@@ -332,32 +537,83 @@ void utf8fp_cont_l(utf8fp *up,utf8f_size_t l)
 //*******************************************************************
 void utf8fp_nextbyte(utf8fp *up) // Jump next byte and reset state.
 {
-   up->state=UTF8FS_VALID;
    up->ucsx=0;
    if (up->ibuf<up->ebuf) up->ibuf++;
+   up->state=up->ibuf<up->ebuf?UTF8FS_VALID:UTF8FS_EOB;
 }
 
 //*******************************************************************
 ucsx_t utf8fp_nextchar(utf8fp *up)
 /* 
+
  Veszi a következő utf8f karaktert.
- Ha a visszatérési érték nem UTF8F_CHECK, akkor az az buf->ucsx karakter.
- Ha UTF8F_CHECK, akkor a buf->state-ban van, hogy miért állt le:
+
+ Ha a visszatérési érték nem UTF8F_CHECK, akkor a visszatérési érték az
+ olvasott ucsx karakter.
+
+ Ha UTF8F_CHECK, akkor a up->state-ban van, hogy mi a helyzet:
+
  up->state:
   - UTF8FS_INVALID: Az utf8f karakter hibás.
-  - UTF8FS_VALID: A karakter érvényes, és az ucsx-ben van.
-  - Bármi más:  Az elemző további adatokra vár.: 
- */
+
+  - UTF8FS_VALID: A karakter érvényes, olvasott ucsx karakter a a
+    visszatérési érték, azaz az UTF8F_CHECK értéke.  Ugyanez az olvasott
+    ucsx karakter benne van az up.ucsx-ben is.
+
+  - UTF8FS_EOB: UTF8 bájtsorozat határán vagyunk, a bufferben nincs több
+    adat.
+
+  - Bármi más:  Egy UTF8 bájt sorozat közepén vagyunk, a bufferben nincs
+    több adat, az elemző további adatokra vár.
+
+*/
 {
+   switch(up->code8)
+   {
+   case UTF8FCMCR_CODE8:
+      code8:
+      if (up->ibuf>=up->ebuf) // No space
+      {
+         if (up->state==UTF8FS_VALID) up->state=UTF8FS_EOB;
+         return UTF8F_CHECK;
+      }
+      up->state=UTF8FS_VALID;
+      up->ucsx=getUcsxFromCode8(up,*up->ibuf);
+      utf8fpNext(up,1);
+   return up->ucsx;
+   case UTF8FCMCR_UTF8FCBUF:
+      if (up->cbufpos<up->cbuflen)
+      {
+         up->state=UTF8FS_VALID;
+         up->ucsx=getUcsxFromCode8(up,up->cbuf[up->cbufpos]);
+         up->cbufpos++;
+         return up->ucsx;
+      }
+      up->state=UTF8FS_VALID;
+      up->code8=UTF8FCMCR_UTF8F;
+   break;
+   case UTF8FCMCR_UTF8FCODE8:
+      if (up->cbufpos<up->cbuflen)
+      {
+         up->state=UTF8FS_VALID;
+         up->ucsx=getUcsxFromCode8(up,up->cbuf[up->cbufpos]);
+         up->cbufpos++;
+         return up->ucsx;
+      }
+      up->state=UTF8FS_VALID;
+      up->code8=UTF8FCMCR_CODE8;
+   goto code8;
+   }
+
    switch(up->state)
    {
    case UTF8FS_INVALID: return UTF8F_CHECK;
    case UTF8FS_VALID  :
-      if (up->ebuf-up->ibuf>=8) return utf8fp_nextcharfull(up);
+      if (up->ebuf-up->ibuf>=UTF8FMAXBYTELEN) return utf8fp_nextcharfull(up);
    return utf8fp_nextcharpart(up,0);
-   case UTF8FS_NOSPACE  :
+   case UTF8FS_EOB    :
       up->state=UTF8FS_VALID;
-      if (up->ebuf-up->ibuf>=8) return utf8fp_nextcharfull(up);
+      if (up->ebuf-up->ibuf>=UTF8FMAXBYTELEN) return utf8fp_nextcharfull(up);
    return utf8fp_nextcharpart(up,0);
    case UTF8FS_S0: 
    case UTF8FS_S1: 
@@ -368,10 +624,25 @@ ucsx_t utf8fp_nextchar(utf8fp *up)
    case UTF8FS_S6: 
    case UTF8FS_S7: 
    return utf8fp_nextcharpart(up,up->state-UTF8FS_S0);
+   default: up->state=UTF8FS_INVALID;up->ucsx=0;return UTF8F_CHECK; // Belső hiba.
    }
-   up->ucsx=0;
-   return UTF8FS_INVALID;
 }
 
+//*******************************************************************
+#ifdef NEMKELL
+ucsx_t utf8fp_nextchar(utf8fp *up)
+{
+   ucsx_t w;
+   fprintf(stderr,"utf8fp_nextchar(s): s: %d,ibuf: %p,ebuf: %p\n",
+          up->state,up->ibuf,up->ebuf);
+
+   w=_utf8fp_nextchar(up);
+   fprintf(stderr,"utf8fp_nextchar(e): r: %xu,s: %d,ibuf: %p,ebuf: %p\n",
+          w,up->state,up->ibuf,up->ebuf);
+
+   return w;
+}
+
+#endif // NEMKELL
 //*******************************************************************
 
