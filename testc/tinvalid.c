@@ -102,7 +102,7 @@ int chkucsx_full(ucsx_t oucsx,int isInvalid,utf8fchar_t *rbuf,utf8f_size_t l,utf
 
    utf8fp_cont(&u,rbuf,bufsize);
    // fprintf(stderr,"chkucsx_full: l: %ld, bufsize: %ld, isInvalid: %d\n",l,bufsize,isInvalid);
-   if (UTF8F_CHECK==(ucsx=utf8fp_nextchar(&u)) && u.state!=UTF8FS_VALID)
+   if (UCSX_CHECK==(ucsx=utf8fp_nextchar_stream(&u)) && u.state!=UTF8FS_VALID)
    {
       if (u.state==UTF8FS_INVALID)
       {
@@ -165,7 +165,7 @@ int chkucsx_step(ucsx_t oucsx,int isInvalid,utf8fchar_t *rbuf,utf8f_size_t l,utf
       DEBUG(fprintf(stderr,"chkucsx_step(f): l: %ld, i:%d, rs: %d\n",l,i,rs);)
       while(1)
       {
-         if (UTF8F_CHECK==(ucsx=utf8fp_nextchar(&u)) && u.state!=UTF8FS_VALID)
+         if (UCSX_CHECK==(ucsx=utf8fp_nextchar_stream(&u)) && u.state!=UTF8FS_VALID)
          {
             if (u.state==UTF8FS_INVALID)
             {
@@ -637,10 +637,3 @@ int main()
 }
 
 //*******************************************************************
-
-
-
-
-
-
-

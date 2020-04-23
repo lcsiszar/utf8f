@@ -6,6 +6,14 @@ dátum, a programozó neve, verzió (ha van) a változás leírása.
 
 Csiszár Levente <csiszar@eriadorber.hu>, 1998.01.13
 
+2020.04.23, Csiszár Levente, UTF8F v0.0.10
+
+ - Tud crlf<->lf konverziót is.
+
+2020.04.22, Csiszár Levente, UTF8F v0.0.9
+
+ - Tud simán 8bites (1bájtos) kódolást is.
+
 2020.04.06, Csiszár Levente, UTF8F v0.0.8 p1
 
  - Teszt-ben <codetable>.h-k átnevezve, hogy ne ütközzön a régi codetable

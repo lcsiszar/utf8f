@@ -1,0 +1,4 @@
+
+
+A t_all script lefuttatja a teszteket.  Ha nem ír 'error'-t sehoil, akkor
+jó.

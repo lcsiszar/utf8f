@@ -22,9 +22,9 @@ bin/utf8f2ucsx <"$TF_UTF8F" >"$TF_UCSX_UTF8F"
 #if cmp "$TF_UCSX" "$TF_UCSX"; then
 if cmp "$TF_UCSX" "$TF_UCSX_UTF8F"; then
    #echo "$?"
-   echo "Egyeznek"
+   echo "OK"
 else
    echo "$?"
-   echo "Nem egyeznek"
+   echo "error"
 fi 
 

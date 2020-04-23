@@ -1,0 +1,14 @@
+#!/bin/bash
+
+./m
+export NO_MAKE=y
+   a2u2a
+   a2u2a_latin2
+   a2u2a_utf8latin2_vegyes
+   a2u2a_utf8latin2_vegyes_crlf2lf
+   a2u2a_utf8latin2_vegyes_crlf2lf_cr
+   a2u2a_utf8latin2_vegyes_crlf2lf_crcrlf
+   a2u2a_utf8latin2_vegyes_lf2crlf
+   a2u2a_utf8latin2_vegyes_lf2crlf_crlf
+   tinvalid
+   u2f2u

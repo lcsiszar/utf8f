@@ -16,10 +16,8 @@ bin/ucsx2utf8f <"$TF_UCSX" >"$TF_UTF8F"
 bin/utf8f2ucsx <"$TF_UTF8F" >"$TF_UCSX_UTF8F"
 
 if cmp "$TF_UCSX" "$TF_UCSX_UTF8F"; then
-   echo "$?"
    echo "$0: OK"
 else
-   echo "$?"
    echo "$0: Error"
 fi 
 

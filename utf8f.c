@@ -272,16 +272,17 @@ static ucsx_t invalidutf8f_skip(utf8fp *up,utf8fchar_t c, int step)
 {
    switch(up->mode)
    {
-   case UTF8FM_UTF8FIXED:
+   case UTF8FM_UTF8FFIXED:
       up->state=UTF8FS_INVALID;
       up->ucsx=c;
-   return UTF8F_CHECK;
-   case UTF8FM_UTF8MIXCODE8:
+   return UCSX_CHECK;
+   case UTF8FM_UTF8FMIXCODE8:
       up->state=UTF8FS_VALID;
       up->ucsx=getUcsxFromCode8(up,c);
       utf8fpNext(up,step);
       return up->ucsx;
    case UTF8FM_CODE8:
+   case UTF8FM_CODE8FIXED:
       up->code8=UTF8FCMCR_CODE8;
       up->state=UTF8FS_VALID;
       up->ucsx=getUcsxFromCode8(up,c);
@@ -291,7 +292,7 @@ static ucsx_t invalidutf8f_skip(utf8fp *up,utf8fchar_t c, int step)
    // Ide nem jühet.
    up->state=UTF8FS_INVALID;
    up->ucsx=c;
-   return UTF8F_CHECK;
+   return UCSX_CHECK;
 }
 
 //*******************************************************************
@@ -301,11 +302,11 @@ static ucsx_t invalidutf8f_pos(utf8fp *up,utf8fchar_t c,int pos)
 {
    switch(up->mode)
    {
-   case UTF8FM_UTF8FIXED:
+   case UTF8FM_UTF8FFIXED:
       up->state=UTF8FS_INVALID;
       up->ucsx=c;
-   return UTF8F_CHECK;
-   case UTF8FM_UTF8MIXCODE8:
+   return UCSX_CHECK;
+   case UTF8FM_UTF8FMIXCODE8:
       up->state=UTF8FS_VALID;
       if (pos==0)
       {
@@ -319,6 +320,7 @@ static ucsx_t invalidutf8f_pos(utf8fp *up,utf8fchar_t c,int pos)
       up->cbuflen=pos;
       return up->ucsx;
    case UTF8FM_CODE8:
+   case UTF8FM_CODE8FIXED:
       up->state=UTF8FS_VALID;
       if (pos==0)
       {
@@ -336,7 +338,7 @@ static ucsx_t invalidutf8f_pos(utf8fp *up,utf8fchar_t c,int pos)
    // Ide nem jöhet.
    up->state=UTF8FS_INVALID;
    up->ucsx=c;
-   return UTF8F_CHECK;
+   return UCSX_CHECK;
 }
 
 //*******************************************************************
@@ -385,7 +387,7 @@ static ucsx_t utf8fp_nextcharfull(utf8fp *up)
            ucsx=getUcsxFromUtf8f_7(up->ibuf);
            if (!(ucsx&~UTF8L_6)) goto invalid; // Nem minimál kódolás.
            utf8fpNext(up,7); 
-           if (ucsx==UTF8F_CHECK) up->ucsx=ucsx;
+           if (ucsx==UCSX_CHECK) up->ucsx=ucsx;
    return ucsx;
    }
    // Belső hiba.
@@ -406,7 +408,7 @@ static ucsx_t utf8fp_nextcharpart(utf8fp *up, int pos)
    if (up->ibuf>=up->ebuf) // No space
    {
       if (up->state==UTF8FS_VALID) up->state=UTF8FS_EOB;
-      return UTF8F_CHECK;
+      return UCSX_CHECK;
    }
 
    if (pos==0)
@@ -436,7 +438,7 @@ static ucsx_t utf8fp_nextcharpart(utf8fp *up, int pos)
       if (up->ibuf>=up->ebuf) // No space
       {
          up->state=UTF8FS_S0+pos;
-         return UTF8F_CHECK;
+         return UCSX_CHECK;
       }
       // if (up->utf8flen==7) fprintf(stderr,"utf8fp_nextcharpart: pos: %d, ibuf, 0x%x, %d\n",pos,*up->ibuf,utf8fpCheck_1i(up->ibuf,0));
       store2cbuf(up,pos,*up->ibuf);
@@ -444,7 +446,7 @@ static ucsx_t utf8fp_nextcharpart(utf8fp *up, int pos)
       {
          return invalidutf8f_pos(up,0,pos);
          up->state=UTF8FS_INVALID;
-         return UTF8F_CHECK;
+         return UCSX_CHECK;
       }
       up->ucsx=((up->ucsx)<<6)|((*up->ibuf)&UTF8_CHARMASK);
       pos++;
@@ -461,7 +463,7 @@ static ucsx_t utf8fp_nextcharpart(utf8fp *up, int pos)
       { // Nem minimál kódolás.
          return invalidutf8f_pos(up,0,pos);
          up->state=UTF8FS_INVALID;
-         return UTF8F_CHECK;
+         return UCSX_CHECK;
       } 
    }
 
@@ -489,8 +491,10 @@ static ucsx_t utf8fp_nextcharpart(utf8fp *up, int pos)
 void utf8fp_setup(utf8fp *up,utf8fchar_t *buf)
 {
    up->state=UTF8FS_EOB;
-   up->mode=UTF8FM_UTF8FIXED;
+   up->mode=UTF8FM_UTF8FFIXED;
    up->code8=UTF8FCMCR_UTF8F;
+   up->crlfmode=UTF8FCRLFMODE_NOCRLFCONV;
+   up->crlfstate=UTF8FCS_NONE;
    up->codetable=NULL;
    up->ucsx=0;
 
@@ -508,16 +512,35 @@ void utf8fp_setmode(utf8fp *up,int mode,ucsx_t codetable[128])
 
    switch(mode)
    {
-   case UTF8FM_UTF8FIXED: up->mode=UTF8FM_UTF8FIXED; break;
-   case UTF8FM_UTF8MIXCODE8:
-      up->mode=UTF8FM_UTF8MIXCODE8;
+   case UTF8FM_UTF8FFIXED: up->mode=UTF8FM_UTF8FFIXED; break;
+   case UTF8FM_UTF8FMIXCODE8:
+      up->mode=UTF8FM_UTF8FMIXCODE8;
       up->codetable=codetable;
    break;
    case UTF8FM_CODE8:
       up->mode=UTF8FM_CODE8;
       up->codetable=codetable;
    break;
+   case UTF8FM_CODE8FIXED:
+      up->code8=UTF8FCMCR_CODE8;
+      up->mode=UTF8FM_CODE8;
+      up->codetable=codetable;
+   break;
    }
+}
+
+//*******************************************************************
+void utf8fp_setcrlfmode(utf8fp *up,int crlfmode)
+// Ha a crlfmode nem létezik, nem állítja be.
+{
+   switch(crlfmode)
+   {
+   case UTF8FCRLFMODE_NOCRLFCONV:
+   case UTF8FCRLFMODE_CRLF2LF   :
+   case UTF8FCRLFMODE_LF2CRLF   :
+      up->crlfmode=crlfmode;
+   }
+
 }
 
 //*******************************************************************
@@ -543,22 +566,22 @@ void utf8fp_nextbyte(utf8fp *up) // Jump next byte and reset state.
 }
 
 //*******************************************************************
-ucsx_t utf8fp_nextchar(utf8fp *up)
+ucsx_t utf8fp_nextchar_stream(utf8fp *up) // Nincs crlf konverzió.
 /* 
 
  Veszi a következő utf8f karaktert.
 
- Ha a visszatérési érték nem UTF8F_CHECK, akkor a visszatérési érték az
+ Ha a visszatérési érték nem UCSX_CHECK, akkor a visszatérési érték az
  olvasott ucsx karakter.
 
- Ha UTF8F_CHECK, akkor a up->state-ban van, hogy mi a helyzet:
+ Ha UCSX_CHECK, akkor a up->state-ban van, hogy mi a helyzet:
 
  up->state:
   - UTF8FS_INVALID: Az utf8f karakter hibás.
 
-  - UTF8FS_VALID: A karakter érvényes, olvasott ucsx karakter a a
-    visszatérési érték, azaz az UTF8F_CHECK értéke.  Ugyanez az olvasott
-    ucsx karakter benne van az up.ucsx-ben is.
+  - UTF8FS_VALID: A karakter érvényes, olvasott ucsx karakter a
+    visszatérési érték, azaz az UCSX_CHECK értéke.  Ugyanez az olvasott
+    ucsx karakter benne van az up->ucsx-ben is.
 
   - UTF8FS_EOB: UTF8 bájtsorozat határán vagyunk, a bufferben nincs több
     adat.
@@ -575,7 +598,7 @@ ucsx_t utf8fp_nextchar(utf8fp *up)
       if (up->ibuf>=up->ebuf) // No space
       {
          if (up->state==UTF8FS_VALID) up->state=UTF8FS_EOB;
-         return UTF8F_CHECK;
+         return UCSX_CHECK;
       }
       up->state=UTF8FS_VALID;
       up->ucsx=getUcsxFromCode8(up,*up->ibuf);
@@ -607,7 +630,7 @@ ucsx_t utf8fp_nextchar(utf8fp *up)
 
    switch(up->state)
    {
-   case UTF8FS_INVALID: return UTF8F_CHECK;
+   case UTF8FS_INVALID: return UCSX_CHECK;
    case UTF8FS_VALID  :
       if (up->ebuf-up->ibuf>=UTF8FMAXBYTELEN) return utf8fp_nextcharfull(up);
    return utf8fp_nextcharpart(up,0);
@@ -624,8 +647,115 @@ ucsx_t utf8fp_nextchar(utf8fp *up)
    case UTF8FS_S6: 
    case UTF8FS_S7: 
    return utf8fp_nextcharpart(up,up->state-UTF8FS_S0);
-   default: up->state=UTF8FS_INVALID;up->ucsx=0;return UTF8F_CHECK; // Belső hiba.
+   default: up->state=UTF8FS_INVALID;up->ucsx=0;return UCSX_CHECK; // Belső hiba.
    }
+}
+
+//*******************************************************************
+#define UCSX_CR 13
+#define UCSX_LF 10
+
+//*******************************************************************
+ucsx_t utf8fp_nextchar_line(utf8fp *up)
+// Hívja az utf8fp_nextchar_stream-t, majd megcsinálja a crlf konverziót.
+{
+   ucsx_t ucsx;
+
+   // fprintf(stderr,"crlfmode: %d, crlfstate: %d\n",up->crlfmode,up->crlfstate);
+   if (up->crlfmode==UTF8FCRLFMODE_NOCRLFCONV) return utf8fp_nextchar_stream(up);
+
+   switch(up->crlfstate)
+   {
+   case UTF8FCS_UCSX:
+      up->crlfstate=UTF8FCS_NONE;
+   return up->crlfucsx;
+   case UTF8FCS_CR:
+      up->crlfstate=UTF8FCS_NONE;
+      ucsx=UCSX_CR;
+   break;
+   case UTF8FCS_INVALID:
+      up->crlfstate=UTF8FCS_NONE;
+   return UCSX_CHECK;
+   case UTF8FCS_EOB:
+      up->crlfstate=UTF8FCS_NONE;
+      ucsx=UCSX_CR;
+   break;
+   default:
+      ucsx=utf8fp_nextchar_stream(up);
+   break;
+   }
+
+   // fprintf(stderr,"ucsx: %d, crlfmode: %d, crlfstate: %d\n",ucsx,up->crlfmode,up->crlfstate);
+
+   if (UCSX_CR==ucsx)
+   {
+      if (UCSX_LF==(ucsx=utf8fp_nextchar_stream(up)))
+      {
+         // cr,lf
+         if (up->crlfmode==UTF8FCRLFMODE_CRLF2LF) return UCSX_LF;
+         
+         // Adni kell egy cr-t, majd a következő hívásra egy lf-et.
+         up->crlfstate=UTF8FCS_UCSX;
+         up->crlfucsx=UCSX_LF;
+         return UCSX_CR;
+      }
+      else if (ucsx==UCSX_CR)
+      {
+         // cr,cr
+         if (up->crlfmode==UTF8FCRLFMODE_CRLF2LF)
+         {
+            up->crlfstate=UTF8FCS_CR;
+            return UCSX_CR;
+         }
+         else // if (up->crlfmode==UTF8CRLFMODE_LF2CRLF)
+         {
+            up->crlfstate=UTF8FCS_CR;
+            return UCSX_CR;
+         }
+      }
+      else if (ucsx==UCSX_CHECK)
+      {
+         if (up->state==UTF8FS_VALID)
+         {
+            up->crlfstate=UTF8FCS_UCSX;
+            up->crlfucsx=ucsx;
+            return UCSX_CR;
+         }
+         else if (up->state==UTF8FS_INVALID)
+         {
+            up->crlfstate=UTF8FCS_INVALID;
+            // up->crlfucsx=ucsx;
+            return UCSX_CR;
+         }
+         else if (up->state==UTF8FS_EOB)
+         {
+            up->crlfstate=UTF8FCS_EOB;
+            up->crlfucsx=UCSX_CR;
+            return UCSX_CHECK;
+         }
+         return ucsx;
+      }
+      else // Normál ucsx karakter.
+      {
+         up->crlfstate=UTF8FCS_UCSX;
+         up->crlfucsx=ucsx;
+         return UCSX_CR;
+      }
+   }
+   else if (UCSX_LF==ucsx)
+   {
+      if (up->crlfmode==UTF8FCRLFMODE_CRLF2LF)
+      {
+         return UCSX_LF;
+      }
+      else // if (up->crlfmode==UTF8FCRLFMODE_LF2CRLF)
+      {
+         up->crlfstate=UTF8FCS_UCSX;
+         up->crlfucsx=UCSX_LF;
+         return UCSX_CR;
+      }
+   }
+   return ucsx;
 }
 
 //*******************************************************************

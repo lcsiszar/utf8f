@@ -10,14 +10,20 @@
 #include <stdint.h>
 #include <stddef.h>
 #include <stdio.h>
-#include <strings.h>
+#include <string.h>
 #include <unistd.h>
 #include <stdlib.h>
+#include <error.h>
  
 #include "utf8f.h"
+
+#include "ucsx_latin2_to_unicode.h"
+
+#define MODE_UTF8FFIXED           0
+#define MODE_UTF8FMIXED_LATIN2    1
  
 //*******************************************************************
-static void f_utf8f2ucsx(int ifid, int ofid,unsigned int bufsize)
+static void f_utf8f2ucsx(int ifid, int ofid,unsigned int bufsize,int mode,int crlfmode)
 {
    int n;
    char buf[bufsize];
@@ -25,13 +31,18 @@ static void f_utf8f2ucsx(int ifid, int ofid,unsigned int bufsize)
    ucsx_t ucsx;
    
    utf8fp_setup(&u,(utf8fchar_t*)buf);
+   if (mode==MODE_UTF8FMIXED_LATIN2)
+   {
+      utf8fp_setmode(&u,UTF8FM_UTF8FMIXCODE8,_ucsx_termcharset_latin2_to_unicode+128);
+   }
+   utf8fp_setcrlfmode(&u,crlfmode);
    
    while(0<(n=read(ifid,buf,bufsize)))
    {
       utf8fp_cont_l(&u,n);
       while(1)
       {
-         if (UTF8F_CHECK==(ucsx=utf8fp_nextchar(&u)) && u.state!=UTF8FS_VALID)
+         if (UCSX_CHECK==(ucsx=utf8fp_nextchar_line(&u)) && u.state!=UTF8FS_VALID)
          {
             if (u.state==UTF8FS_INVALID)
             {
@@ -58,9 +69,26 @@ static void f_utf8f2ucsx(int ifid, int ofid,unsigned int bufsize)
 }
 
 //*******************************************************************
-int main()
+int main(int argc,char *argv[])
 {
-   f_utf8f2ucsx(0,1,7000);
+   int i;
+   int crlfmode=UTF8FCRLFMODE_NOCRLFCONV;
+   int mode=MODE_UTF8FFIXED;
+   int bufsize=1;
+
+   for(i=1;i<argc;i++)
+   {
+      // fprintf(stderr,"argv[%d]: '%s'\n",i,argv[i]);
+      char *p=argv[i];
+      if (!strcmp(p,"--crlf2lf"))    crlfmode=UTF8FCRLFMODE_CRLF2LF;
+      else if (!strcmp(p,"--lf2crlf"))    crlfmode=UTF8FCRLFMODE_LF2CRLF;
+      else if (!strcmp(p,"--nocrlfconv")) crlfmode=UTF8FCRLFMODE_NOCRLFCONV;
+      else if (!strcmp(p,"--utf8fmixedlatin2")) mode=MODE_UTF8FMIXED_LATIN2;
+      else if (!strcmp(p,"--utf8ffixed"))       mode=MODE_UTF8FFIXED;
+      else if (!strcmp(p,"--bigbuf"))           bufsize=4096;
+      else error(1,0,"Unknown option: %s\n",p);
+   }
+   f_utf8f2ucsx(0,1,bufsize,mode,crlfmode);
    return 0;
 }
 
