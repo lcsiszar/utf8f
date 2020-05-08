@@ -29,17 +29,42 @@ static void f_utf8f2ucsx(int ifid, int ofid,unsigned int bufsize,int mode,int cr
    char buf[bufsize];
    utf8fp u;
    ucsx_t ucsx;
+   int mixedmode=0;
+   int overeob=0;
    
    utf8fp_setup(&u,(utf8fchar_t*)buf);
    if (mode==MODE_UTF8FMIXED_LATIN2)
    {
       utf8fp_setmode(&u,UTF8FM_UTF8FMIXCODE8,_ucsx_termcharset_latin2_to_unicode+128);
+      mixedmode=1;
    }
    utf8fp_setcrlfmode(&u,crlfmode);
    
-   while(0<(n=read(ifid,buf,bufsize)))
+   while(1)
    {
-      utf8fp_cont_l(&u,n);
+      if (!mixedmode)
+      {
+         if (0<(n=read(ifid,buf,bufsize)))
+         {
+            // fprintf(stderr,"read: n: %d\n",n);
+            utf8fp_cont_l(&u,n);
+         }
+         else
+            break;
+      }
+      else
+      {
+         if (overeob) break;
+
+         if (0<(n=read(ifid,buf,bufsize)))
+         {
+            // fprintf(stderr,"read: n: %d\n",n);
+            utf8fp_cont_l(&u,n);
+         }
+         else
+            overeob=1;
+      }
+      
       while(1)
       {
          if (UCSX_CHECK==(ucsx=utf8fp_nextchar_line(&u)) && u.state!=UTF8FS_VALID)

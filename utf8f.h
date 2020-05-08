@@ -8,7 +8,7 @@
 #ifdef __cplusplus
 extern "C" {
 #endif // __cplusplus
-#define UTF8F_VERSION "v0.0.10"
+#define UTF8F_VERSION "v0.0.11"
 extern const char *utf8fp_version;
 
 //*******************************************************************

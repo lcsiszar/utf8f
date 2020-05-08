@@ -1,0 +1,6 @@
+#!/bin/bash
+
+./m
+
+bin/utf8f2ucsx --utf8fmixedlatin2 --bigbuf <tu.txt
+#bin/utf8f2ucsx --utf8fmixedlatin2 --bigbuf <tu2.txt

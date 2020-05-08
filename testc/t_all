@@ -10,5 +10,7 @@ export NO_MAKE=y
    a2u2a_utf8latin2_vegyes_crlf2lf_crcrlf
    a2u2a_utf8latin2_vegyes_lf2crlf
    a2u2a_utf8latin2_vegyes_lf2crlf_crlf
+   a2u2a_3_utf8latin2_vegyes
+   a2u2a_4_utf8latin2_vegyes_crlf2lf
    tinvalid
    u2f2u

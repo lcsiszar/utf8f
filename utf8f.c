@@ -270,6 +270,7 @@ static ucsx_t invalidutf8f_skip(utf8fp *up,utf8fchar_t c, int step)
 // Amikor invalid az utf8 szekvencia következő bájtja és csak egyet vagy
 // nullát kell lépni.
 {
+   // fprintf(stderr,"invalidutf8f_skip: mode: %d,c: %d(0x%x),step: %d\n",up->mode,c,c,step);
    switch(up->mode)
    {
    case UTF8FM_UTF8FFIXED:
@@ -277,6 +278,7 @@ static ucsx_t invalidutf8f_skip(utf8fp *up,utf8fchar_t c, int step)
       up->ucsx=c;
    return UCSX_CHECK;
    case UTF8FM_UTF8FMIXCODE8:
+      fprintf(stderr,"mixcode8: step: %d\n",step);
       up->state=UTF8FS_VALID;
       up->ucsx=getUcsxFromCode8(up,c);
       utf8fpNext(up,step);
@@ -289,7 +291,7 @@ static ucsx_t invalidutf8f_skip(utf8fp *up,utf8fchar_t c, int step)
       utf8fpNext(up,step);
       return up->ucsx;
    }
-   // Ide nem jühet.
+   // Ide nem jöhet.
    up->state=UTF8FS_INVALID;
    up->ucsx=c;
    return UCSX_CHECK;
@@ -300,6 +302,7 @@ static ucsx_t invalidutf8f_pos(utf8fp *up,utf8fchar_t c,int pos)
 // Amikor invalid az egész utf8 szekvencia és a pos-nál derül ki.
 // Az ibuf a pos-ra mutat.
 {
+   // fprintf(stderr,"invalidutf8f_pos: mode: %d,c: %d(0x%x),pos: %d\n",up->mode,c,c,pos);
    switch(up->mode)
    {
    case UTF8FM_UTF8FFIXED:
@@ -342,7 +345,33 @@ static ucsx_t invalidutf8f_pos(utf8fp *up,utf8fchar_t c,int pos)
 }
 
 //*******************************************************************
-static ucsx_t utf8fp_nextcharfull(utf8fp *up)
+// #define P_UTF8FP_NEXTCHARFULL
+#ifndef P_UTF8FP_NEXTCHARFULL
+
+#define UTF8FP_NEXTCHARFULL utf8fp_nextcharfull
+
+#else
+
+#define UTF8FP_NEXTCHARFULL _utf8fp_nextcharfull
+#define X_UTF8FP_NEXTCHARFULL utf8fp_nextcharfull
+
+static ucsx_t UTF8FP_NEXTCHARFULL(utf8fp *up);
+//*******************************************************************
+ucsx_t X_UTF8FP_NEXTCHARFULL(utf8fp *up)
+{
+   ucsx_t w;
+
+   fprintf(stderr,"utf8fp_nextcharfull(e): m: %d, s: %d, code8: %d\n",
+      up->mode,up->state,up->code8);
+   w=UTF8FP_NEXTCHARFULL(up);
+   fprintf(stderr,"utf8fp_nextcharfull(u): m: %d, s: %d, code8: %d,ucsx: %d(0x%x)\n",
+      up->mode,up->state,up->code8,w,w);
+   return w;
+}
+#endif // P_UTF8FP_NEXTCHARFULL
+
+//*******************************************************************
+static ucsx_t UTF8FP_NEXTCHARFULL(utf8fp *up)
 // Akkor hívja, amikor buf-ban biztosan van 7 hely.
 // A state-nek UTF8FS_VALID-nak kell lennie.
 {
@@ -400,15 +429,49 @@ static ucsx_t utf8fp_nextcharfull(utf8fp *up)
 #define store2cbuf(up,pos,c) ((up)->cbuf[(pos)]=(c))
 
 //*******************************************************************
-static ucsx_t utf8fp_nextcharpart(utf8fp *up, int pos)
+// #define P_UTF8FP_NEXTCHARPART
+#ifndef P_UTF8FP_NEXTCHARPART
+
+#define UTF8FP_NEXTCHARPART utf8fp_nextcharpart
+
+#else
+
+#define UTF8FP_NEXTCHARPART _utf8fp_nextcharpart
+#define X_UTF8FP_NEXTCHARPART utf8fp_nextcharpart
+
+static ucsx_t UTF8FP_NEXTCHARPART(utf8fp *up, int pos);
+//*******************************************************************
+ucsx_t X_UTF8FP_NEXTCHARPART(utf8fp *up, int pos)
+{
+   ucsx_t w;
+
+   fprintf(stderr,"utf8fp_nextcharpart(e): m: %d,s: %d,code8: %d,pos: %d,l: %lu\n",
+      up->mode,up->state,up->code8,pos,up->ebuf-up->ibuf);
+   w=UTF8FP_NEXTCHARPART(up,pos);
+   fprintf(stderr,"utf8fp_nextcharpart(u): m: %d,s: %d,code8: %d,pos: %d,l: %ld,ucsx: %d(0x%x)\n",
+      up->mode,up->state,up->code8,pos,up->ebuf-up->ibuf,w,w);
+   return w;
+}
+#endif // P_UTF8FP_NEXTCHARPART
+
+//*******************************************************************
+static ucsx_t UTF8FP_NEXTCHARPART(utf8fp *up, int pos)
 // Az utf kódban a pos pozíciónál tartunk.
 // Ha a pos nem nulla, akkor az up->utf8flen ki van töltve.
 {
 
    if (up->ibuf>=up->ebuf) // No space
    {
-      if (up->state==UTF8FS_VALID) up->state=UTF8FS_EOB;
-      return UCSX_CHECK;
+      if (up->state==UTF8FS_VALID)
+      {
+         up->state=UTF8FS_EOB;
+         return UCSX_CHECK;
+      }
+      // fprintf(stderr,"no space to cbuf: pos: %d\n",pos);
+      // Át kell kapcsolni cbuf-ra.
+      
+      return invalidutf8f_pos(up,0,pos);
+      // return UCSX_CHECK;
    }
 
    if (pos==0)
@@ -435,8 +498,10 @@ static ucsx_t utf8fp_nextcharpart(utf8fp *up, int pos)
       
    for(;pos<up->utf8flen;)
    {
+      // fprintf(stderr,"pos: %d\n",pos);
       if (up->ibuf>=up->ebuf) // No space
       {
+         // fprintf(stderr,"no space: pos: %d\n",pos);
          up->state=UTF8FS_S0+pos;
          return UCSX_CHECK;
       }
@@ -444,9 +509,8 @@ static ucsx_t utf8fp_nextcharpart(utf8fp *up, int pos)
       store2cbuf(up,pos,*up->ibuf);
       if (!utf8fpCheck_1i(up->ibuf,0))
       {
+         // fprintf(stderr,"not enough len: pos: %d\n",pos);
          return invalidutf8f_pos(up,0,pos);
-         up->state=UTF8FS_INVALID;
-         return UCSX_CHECK;
       }
       up->ucsx=((up->ucsx)<<6)|((*up->ibuf)&UTF8_CHARMASK);
       pos++;
@@ -462,8 +526,6 @@ static ucsx_t utf8fp_nextcharpart(utf8fp *up, int pos)
       if (!(up->ucsx&~(masks[up->utf8flen-2])))
       { // Nem minimál kódolás.
          return invalidutf8f_pos(up,0,pos);
-         up->state=UTF8FS_INVALID;
-         return UCSX_CHECK;
       } 
    }
 
@@ -566,7 +628,34 @@ void utf8fp_nextbyte(utf8fp *up) // Jump next byte and reset state.
 }
 
 //*******************************************************************
-ucsx_t utf8fp_nextchar_stream(utf8fp *up) // Nincs crlf konverzió.
+// #define P_UTF8FP_NETXCHAR_STREAM
+#ifndef P_UTF8FP_NETXCHAR_STREAM
+
+#define UTF8FP_NETXCHAR_STREAM utf8fp_nextchar_stream
+
+#else
+
+#define UTF8FP_NETXCHAR_STREAM _utf8fp_nextchar_stream
+#define X_UTF8FP_NETXCHAR_STREAM utf8fp_nextchar_stream
+
+//*******************************************************************
+ucsx_t X_UTF8FP_NETXCHAR_STREAM(utf8fp *up) // Nincs crlf konverzió.
+{
+   extern ucsx_t _utf8fp_nextchar_stream(utf8fp *up);
+   ucsx_t w;
+
+   fprintf(stderr,"utf8fp_nextchar_stream(e): m: %d, s: %d, code8: %d\n",
+      up->mode,up->state,up->code8);
+   w=UTF8FP_NETXCHAR_STREAM(up);
+   fprintf(stderr,"utf8fp_nextchar_stream(u): m: %d, s: %d, code8: %d,ucsx: %d(0x%x)\n",
+      up->mode,up->state,up->code8,w,w);
+   return w;
+}
+
+#endif // P_UTF8FP_NETXCHAR_STREAM
+
+//*******************************************************************
+ucsx_t UTF8FP_NETXCHAR_STREAM(utf8fp *up) // Nincs crlf konverzió.
 /* 
 
  Veszi a következő utf8f karaktert.
@@ -591,6 +680,7 @@ ucsx_t utf8fp_nextchar_stream(utf8fp *up) // Nincs crlf konverzió.
 
 */
 {
+   // fprintf(stderr,"utf8fp_nextchar_stream: s: %d, code8: %d\n",up->state,up->code8);
    switch(up->code8)
    {
    case UTF8FCMCR_CODE8:

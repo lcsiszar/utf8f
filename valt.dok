@@ -6,6 +6,10 @@ dátum, a programozó neve, verzió (ha van) a változás leírása.
 
 Csiszár Levente <csiszar@eriadorber.hu>, 1998.01.13
 
+2020.05.08, Csiszár Levente, UTF8F v0.0.11
+
+ - Ha a stream végén volt félbehagyott utf8 szekvencia, azt rosszul kezelte.
+
 2020.04.23, Csiszár Levente, UTF8F v0.0.10
 
  - Tud crlf<->lf konverziót is.
