@@ -72,6 +72,7 @@ typedef uint32_t ucsx_t;
 #define UTF8FCS_INVALID 3
 #define UTF8FCS_EOB     4
 
+typedef ucsx_t (*utf8f_ucsxconverter)(ucsx_t ucsxsignum);
 
 typedef struct _utf8fp
 {
@@ -96,6 +97,8 @@ typedef struct _utf8fp
    ucsx_t *codetable;  // Egy 128 ucsx karakter tartalmazó tábla.  A 128 és
                        // az annál nagyobb 8bites karaktereket ezzel kódolja
                        // ucsx-re, amennyiben a mode ezt lehetővé teszi.
+
+   utf8f_ucsxconverter *ucsxconverter;
 
    utf8fchar_t *buf;  // A stream buffere.
    utf8fchar_t *ibuf; // A kövekező, még feldolgozatlan karakterre mutat.
@@ -135,10 +138,11 @@ extern void utf8fp_setcrlfmode(utf8fp *up,int crlfmode);
 extern void utf8fp_setup(utf8fp *up,utf8fchar_t *buf);
 // Inicializál egy utf8fp kódolót az olvasott stream elejére.
 
-/* Két eset van:
+/*
+   Két eset van:
 
-   Mindig ugyanabba a pufferben adjuk meg a stream következő bájtjait
-   ------------------------------------------------------------------
+   Mindig ugyanabban a pufferben adjuk meg a stream következő bájtjait
+   -------------------------------------------------------------------
 
    Ekkor a setup-nak megadjuk a buf-ot, amibe olvasni fogunk és az
    utf8fp_cont_l()-el mindig beállítjuk mennyi bájt van a pufferben.
@@ -146,7 +150,7 @@ extern void utf8fp_setup(utf8fp *up,utf8fchar_t *buf);
    A stream-ből mindig különböző pufferbe jönnek a bájtok
    ------------------------------------------------------
 
-   Ekkor itt NULL-t adunk buf-nak és az utf8f_cont()-al mindg megadjuk a
+   Ekkor itt NULL-t adunk buf-nak és az utf8f_cont()-al mindig megadjuk a
    puffer-t és a hosszát is.
 
 */
