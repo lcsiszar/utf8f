@@ -1,0 +1,10 @@
+#!/bin/bash
+
+(
+./m
+rm -f  latin2full_ucsx_codec.txt  latin2full_ucsx.txt latin2full_8bit.txt latin2full_ucsx_pairs.txt
+
+bin/latin2full_unicode_pairs
+#cat latin2full_ucsx_pairs.txt
+)
+# 2>&1 | less -S

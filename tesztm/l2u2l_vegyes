@@ -1,0 +1,29 @@
+#!/bin/bash
+
+# latin2->utf8->latin2
+
+#set -x
+TD=tmpdir
+
+TF_START=arvizturo2_vegyes.txt
+TF_EXPECTED_RESULT=arvizturo2_latin2.txt
+TF_R_UTF8F="$TD/arvizturo2_r_utf8.txt"
+TF_RESULT="$TF_R_UTF8F"
+
+mkdir -p "$TD"
+
+if ! m; then
+   echo "Compile error"
+   exit 1
+fi
+
+bin/utf8fmixedlatin2full2latin2full <"$TF_START" >"$TF_R_UTF8F"
+
+if cmp "$TF_RESULT" "$TF_EXPECTED_RESULT"; then
+   # echo "$?"
+   echo "$0: OK"
+else
+   echo "$?"
+   echo "$0: error"
+fi 
+

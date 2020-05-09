@@ -1,0 +1,31 @@
+#!/bin/bash
+
+names()
+{
+echo latin2full_to_unicode.h
+echo unicode_to_latin2full.h
+}
+
+txts()
+{
+echo latin2full_to_unicode.txt
+echo unicode_to_latin2full.txt
+}
+
+NAMES=$(names)
+TXTS=$(txts)
+DEST=..
+(
+./m
+rm -f $TXTS
+rm -f $NAMES
+bin/c_latin2full_vs_unicode
+#cat ucsx2latin2.h
+for NAME in $NAMES; do
+   if ! cmp -s $NAME $DEST/$NAME; then
+      echo cp -af $NAME $DEST/$NAME
+      cp -af $NAME $DEST/$NAME
+   fi
+done
+)
+# 2>&1 | less -S

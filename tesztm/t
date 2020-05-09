@@ -1,0 +1,8 @@
+#!/bin/bash
+
+./m
+export NO_MAKE=y
+./l2u2l_latin2
+./l2u2l_vegyes
+./u2l2u_utf8
+./u2l2u_vegyes

@@ -1,0 +1,4 @@
+
+latin2<->unicode konverziós táblák elkeszítése C header-be a konverziós
+teszt programokhoz.  A gen script lefordítja a programot, elkészíti vele a
+header-eket és fel is másolja a szülő könyvtárba.

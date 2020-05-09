@@ -290,7 +290,7 @@ static ucsx_t invalidutf8f_skip(utf8fp *up,utf8fchar_t c, int step)
       up->ucsx=c;
    return UCSX_CHECK;
    case UTF8FM_UTF8FMIXCODE8:
-      fprintf(stderr,"mixcode8: step: %d\n",step);
+      // fprintf(stderr,"mixcode8: step: %d\n",step);
       up->state=UTF8FS_VALID;
       up->ucsx=getUcsxFromCode8(up,c);
       utf8fpNext(up,step);
@@ -603,6 +603,12 @@ void utf8fp_setmode(utf8fp *up,int mode,ucsx_t codetable[128])
       up->codetable=codetable;
    break;
    }
+}
+
+//*******************************************************************
+void utf8fp_setucsxconverter(utf8fp *up,utf8f_ucsxconverter ucsxconverter)
+{
+   up->ucsxconverter=ucsxconverter;
 }
 
 //*******************************************************************

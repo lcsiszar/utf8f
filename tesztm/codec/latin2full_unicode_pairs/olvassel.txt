@@ -1,0 +1,3 @@
+
+A gen script elkesziti a latin2/unicode parokat a latin2full_ucsx_pairs.txt
+fajlba a recode segitsegevel.

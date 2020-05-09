@@ -1,0 +1,4 @@
+
+
+NAME=latin2full_unicode_pairs
+g++ -o bin/$NAME $NAME.cpp

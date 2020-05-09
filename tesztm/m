@@ -1,0 +1,6 @@
+#!/bin/bash
+
+if [ "$NO_MAKE" = "y" ]; then exit 0; fi
+mkdir -p bin
+make "$@" 2>&1 | tee m.log
+exit ${PIPESTATUS[0]}

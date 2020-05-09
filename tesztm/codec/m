@@ -1,0 +1,6 @@
+
+# (cd latin2full_unicode_pairs && ./gen)
+
+mkdir -p bin
+NAME=c_latin2full_vs_unicode
+g++ -o bin/$NAME $NAME.cpp

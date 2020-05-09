@@ -1,0 +1,27 @@
+#!/bin/bash
+
+TD=tmpdir
+
+TF_UTF8F=arvizturo.txt
+TF_UCSX="$TD/arvizturo_ucsx.txt"
+TF_UTF8F_UCSX="$TD/arvizturo_r.txt"
+
+mkdir -p "$TD"
+
+if ! m; then
+   echo "Compile error"
+   exit 1
+fi
+
+bin/utf8fmixedlatin2full2latin2full <"$TF_UTF8F" >"$TF_UCSX"
+exit 1
+bin/ucsx2utf8f <"$TF_UCSX" >"$TF_UTF8F_UCSX"
+
+if cmp "$TF_UTF8F" "$TF_UTF8F_UCSX"; then
+   # echo "$?"
+   echo "$0: OK"
+else
+   echo "$?"
+   echo "$0: error"
+fi 
+
