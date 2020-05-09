@@ -23,7 +23,7 @@ static
 #include "unicode_to_latin2full.h"
 
 //*******************************************************************
-static ucsx_t ucsxconverter_2latin2full(ucsx_t ucsx)
+static ucsx_t ucsxconverter_2latin2full(ucsx_t ucsx, utf8fp *up)
 {
    // fprintf(stderr,"converter: %d(%x)\n",ucsx,ucsx);
    return unicode_to_latin2full(ucsx,'?');
@@ -40,7 +40,7 @@ static void f_utf8fmixedlatin2full2latin2full(int ifid, int ofid,unsigned int bu
    int overeob=0;
    
    utf8fp_setup(&u,(utf8fchar_t*)buf);
-   // utf8fp_setmode(&u,UTF8FM_UTF8FMIXCODE8,_table_latin2full_to_unicode+128);
+   // utf8fp_setmode(&u,UTF8FM_UTF8FMIXCODE8,_table_latin2full_to_unicode);
    utf8fp_setmode(&u,UTF8FM_UTF8FMIXCODE8,NULL);
    // utf8fp_setucsxconverter(&u,(utf8f_ucsxconverter *)&ucsxconverter_2latin2full);
    utf8fp_setucsxconverter(&u,ucsxconverter_2latin2full);

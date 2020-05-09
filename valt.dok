@@ -6,6 +6,12 @@ dátum, a programozó neve, verzió (ha van) a változás leírása.
 
 Csiszár Levente <csiszar@eriadorber.hu>, 1998.01.13
 
+2020.05.09, Csiszár Levente, UTF8F v0.2.00
+
+ - Áttérés 256 bájtos codetable-ra - ezt az ucsxconverter lehetővé teszi.
+
+ - ucsxconverterdata.
+
 2020.05.09, Csiszár Levente, UTF8F v0.1.00
 
  - ucsxconverter letesztelve.

@@ -35,7 +35,7 @@ static void f_utf8f2ucsx(int ifid, int ofid,unsigned int bufsize,int mode,int cr
    utf8fp_setup(&u,(utf8fchar_t*)buf);
    if (mode==MODE_UTF8FMIXED_LATIN2)
    {
-      utf8fp_setmode(&u,UTF8FM_UTF8FMIXCODE8,_ucsx_termcharset_latin2_to_unicode+128);
+      utf8fp_setmode(&u,UTF8FM_UTF8FMIXCODE8,_ucsx_termcharset_latin2_to_unicode);
       mixedmode=1;
    }
    utf8fp_setcrlfmode(&u,crlfmode);

@@ -33,7 +33,7 @@ static void f_utf8fmixedlatin2full2utf8f(int ifid, int ofid,unsigned int bufsize
    int overeob=0;
    
    utf8fp_setup(&u,(utf8fchar_t*)buf);
-   utf8fp_setmode(&u,UTF8FM_UTF8FMIXCODE8,_table_latin2full_to_unicode+128);
+   utf8fp_setmode(&u,UTF8FM_UTF8FMIXCODE8,_table_latin2full_to_unicode);
    mixedmode=1;
    utf8fp_setcrlfmode(&u,crlfmode);
    

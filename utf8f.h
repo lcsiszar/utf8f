@@ -8,7 +8,7 @@
 #ifdef __cplusplus
 extern "C" {
 #endif // __cplusplus
-#define UTF8F_VERSION "v0.1.00"
+#define UTF8F_VERSION "v0.2.00"
 extern const char *utf8fp_version;
 
 //*******************************************************************
@@ -72,9 +72,12 @@ typedef uint32_t ucsx_t;
 #define UTF8FCS_INVALID 3
 #define UTF8FCS_EOB     4
 
-typedef ucsx_t (*utf8f_ucsxconverter)(ucsx_t ucsx);
+struct _utf8fp;
+typedef struct _utf8fp utf8fp;
 
-typedef struct _utf8fp
+typedef ucsx_t (*utf8f_ucsxconverter)(ucsx_t ucsx,utf8fp *up);
+
+struct _utf8fp
 {
    int state;       // UTF8FS_xxx
 
@@ -94,11 +97,12 @@ typedef struct _utf8fp
    utf8fchar_t cbuf[8]; // Itt tárolja a még feldolgozatlan karaktereket,
                         // amit a 8btes konverzióhoz használ.
 
-   ucsx_t *codetable;  // Egy 128 ucsx karakter tartalmazó tábla.  A 128 és
-                       // az annál nagyobb 8bites karaktereket ezzel kódolja
-                       // ucsx-re, amennyiben a mode ezt lehetővé teszi.
+   ucsx_t *codetable;  // Egy 256 ucsx karakter tartalmazó tábla.  A 8bites
+                       // karaktereket ezzel kódolja ucsx-re, amennyiben a
+                       // mode ezt lehetővé teszi.
 
    utf8f_ucsxconverter ucsxconverter;
+   void *ucsxconverterdata;
 
    utf8fchar_t *buf;  // A stream buffere.
    utf8fchar_t *ibuf; // A kövekező, még feldolgozatlan karakterre mutat.
@@ -110,7 +114,7 @@ typedef struct _utf8fp
    int utf8flen;     // Az elemzés alatt álló utf8f karakter hossza.  Csak
                      // akkor van helyesen kitöltve, ha a status
                      // UTF8FS_VALID vagy UTF8FS_VALID.
-} utf8fp;
+};
 
 
 //*******************************************************************
@@ -127,12 +131,14 @@ extern int ucsx2utf8f(uint32_t ucsx,utf8fchar_t *buf, utf8f_size_t buflen);
 // be.
 
 //*******************************************************************
-extern void utf8fp_setmode(utf8fp *up,int mode,ucsx_t codetable[128]);
+extern void utf8fp_setmode(utf8fp *up,int mode,ucsx_t codetable[256]);
 // Ha a mode nem létezik, akkor nem állítja be.
 // A kódtáblát csak akkor állítja be, ha a mode-hez az szükséges.
 
 //*******************************************************************
 extern void utf8fp_setucsxconverter(utf8fp *up,utf8f_ucsxconverter ucsxconverter);
+extern void *utf8fp_getucsxconverterdata(utf8fp *up);
+extern void utf8fp_setucsxconverterdata(utf8fp *up,void *ucsxconverterdata);
 
 //*******************************************************************
 extern void utf8fp_setcrlfmode(utf8fp *up,int crlfmode);

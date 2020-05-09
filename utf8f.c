@@ -260,9 +260,13 @@ static const char lenFromUtfHead[256] = { // 0= invalid header (0b10xxxxxx and 0
 //*******************************************************************
 static ucsx_t getUcsxFromCode8(utf8fp *up,utf8fchar_t c)
 {
+#ifdef OLD
    if (c<128) return c;
    if (up->codetable==NULL) return c;
    return up->codetable[c-128];
+#endif
+   if (up->codetable==NULL) return c;
+   return up->codetable[c];
 }
 
 //*******************************************************************
@@ -274,7 +278,7 @@ static ucsx_t convucsx(utf8fp *up,ucsx_t ucsx)
 
 {
    if (up->ucsxconverter==NULL) return ucsx;
-   return (*up->ucsxconverter)(ucsx);
+   return (*up->ucsxconverter)(ucsx,up);
 }
 
 //*******************************************************************
@@ -572,6 +576,7 @@ void utf8fp_setup(utf8fp *up,utf8fchar_t *buf)
    up->crlfstate=UTF8FCS_NONE;
    up->codetable=NULL;
    up->ucsxconverter=NULL;
+   up->ucsxconverterdata=NULL;
    up->ucsx=0;
 
    up->buf=up->ibuf=buf;
@@ -583,7 +588,7 @@ void utf8fp_setup(utf8fp *up,utf8fchar_t *buf)
 }
 
 //*******************************************************************
-void utf8fp_setmode(utf8fp *up,int mode,ucsx_t codetable[128])
+void utf8fp_setmode(utf8fp *up,int mode,ucsx_t codetable[256])
 {
 
    switch(mode)
@@ -609,6 +614,18 @@ void utf8fp_setmode(utf8fp *up,int mode,ucsx_t codetable[128])
 void utf8fp_setucsxconverter(utf8fp *up,utf8f_ucsxconverter ucsxconverter)
 {
    up->ucsxconverter=ucsxconverter;
+}
+
+//*******************************************************************
+void *utf8fp_getucsxconverterdata(utf8fp *up)
+{
+   return up->ucsxconverterdata;
+}
+
+//*******************************************************************
+void utf8fp_setucsxconverterdata(utf8fp *up,void *ucsxconverterdata)
+{
+   up->ucsxconverterdata=ucsxconverterdata;
 }
 
 //*******************************************************************
